@@ -1,10 +1,10 @@
 #include "buttons.h"
 
 // Existing buttons
-const int BTN_FWD  = NULL;
-const int BTN_REV  = NULL;
-const int BTN_RGHT = NULL;
-const int BTN_LFT  = NULL;
+const int BTN_FWD  = 11;
+const int BTN_REV  = 12;
+const int BTN_RGHT = 13;
+const int BTN_LFT  = 10;
 
 // Test button
 const int BTN_TEST = 21;
