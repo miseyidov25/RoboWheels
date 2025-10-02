@@ -11,4 +11,7 @@ void motors_right();
 void motors_brake();
 void motors_coast();
 
+// High-level update function for main loop
+void motors_update(bool fwd, bool rev, bool left, bool right, bool obstacle);
+
 #endif
