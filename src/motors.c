@@ -1,12 +1,16 @@
 #include "motors.h"
 
 // Motor pins
-const int IN1 = 6;
-const int IN2 = 7;
-const int IN3 = 2;
-const int IN4 = 4;
-const int ENA = 3;
-const int ENB = 5;
+const int IN1 = 7;
+const int IN2 = 6;
+const int IN3 = 4;
+const int IN4 = 2;
+const int ENA = 3;  // PWM pin for left motor
+const int ENB = 5;  // PWM pin for right motor
+
+// Motor speed (0-255)
+int motorSpeed = 185;
+
 
 void motors_init() {
     pinMode(IN1, OUTPUT);
@@ -15,9 +19,16 @@ void motors_init() {
     pinMode(IN4, OUTPUT);
     pinMode(ENA, OUTPUT);
     pinMode(ENB, OUTPUT);
-    digitalWrite(ENA, HIGH);
-    digitalWrite(ENB, HIGH);
+
     motors_coast();
+    analogWrite(ENA, motorSpeed);
+    analogWrite(ENB, motorSpeed);
+}
+
+void motors_set_speed(int speed) {
+    motorSpeed = constrain(speed, 0, 255);
+    analogWrite(ENA, motorSpeed);
+    analogWrite(ENB, motorSpeed);
 }
 
 void motors_forward() {
@@ -51,18 +62,7 @@ void motors_coast() {
 }
 
 // High-level update called from main
-void motors_update(bool fwd, bool rev, bool left, bool right, bool obstacle) {
-    if (obstacle) {
-        motors_brake();
-        return;
-    }
-
-    if (fwd && !rev) motors_forward();
-    else if (rev && !fwd) motors_reverse();
-    else if (fwd && rev) motors_brake();
+void motors_update(bool fwd) {
+    if (fwd) motors_forward();
     else motors_coast();
-
-    if (left && !right) motors_left();
-    else if (right && !left) motors_right();
-    else if (left && right) motors_brake();
 }

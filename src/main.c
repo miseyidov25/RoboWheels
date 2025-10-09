@@ -1,42 +1,22 @@
 #include <Arduino.h>
 #include "motors.h"
-#include "leds.h"
 #include "buttons.h"
-#include "echo.h"
-
-// Echo sensor pins
-#define TRIG 8
-#define ECHO 9
-#define STOP_DISTANCE 10
 
 void setup() {
-    motors_init();
-    leds_init();
-    buttons_init();
-    echo_init(TRIG, ECHO);
+    motors_init();        // Initialize motor pins
+    buttons_init();       // Initialize test button
 }
 
 void loop() {
-    buttons_update();
-    unsigned long now = millis();
+    buttons_update();     // Update button state (handle debounce & toggle)
 
-    // Normal button states
-    bool fwd   = is_forward_pressed();
-    bool rev   = is_reverse_pressed();
-    bool left  = is_left_pressed();
-    bool right = is_right_pressed();
-
-    // Test button override (pin 21 toggle)
+    // Move robot based on toggle
     if (is_test_forward_active()) {
-        fwd = true;
-        rev = false;
+        motors_set_speed(185); // Adjust speed as desired
+        motors_forward();
+    } else {
+        motors_coast();
     }
 
-    // Echo distance
-    int distance = echo_getDistance();
-    bool obstacle = (distance > 0 && distance <= STOP_DISTANCE);
-
-    // Update motors + LEDs
-    motors_update(fwd, rev, left, right, obstacle);
-    leds_update(now, fwd, rev, left, right);
+    delay(30); // Small delay for stability
 }
