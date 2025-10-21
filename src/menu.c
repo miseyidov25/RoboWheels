@@ -1,4 +1,13 @@
 #include "menu.h"
+//libraries for the OLED screen
+
+
+
+//Configuration for the OLED display
+
+
+
+
 
 //Button configuration
 #define BTN_NEXT   2
