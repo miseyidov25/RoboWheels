@@ -1,18 +1,30 @@
 #include <Arduino.h>
 #include "motors.h"
 #include "buttons.h"
+#include "echo.h"
+
+// Define pins for ultrasonic sensor
+const int TRIG_PIN = 8;
+const int ECHO_PIN = 9;
+const int STOP_DISTANCE_CM = 10;  // Stop if object closer than 10 cm
 
 void setup() {
     motors_init();        // Initialize motor pins
     buttons_init();       // Initialize test button
+    echo_init(TRIG_PIN, ECHO_PIN); // Ultrasonic sensor
 }
 
 void loop() {
     buttons_update();     // Update button state (handle debounce & toggle)
 
-    // Move robot based on toggle
-    if (is_test_forward_active()) {
-        motors_set_speed(185); // Adjust speed as desired
+    int distance = echo_getDistance();
+    bool obstacle = (distance > 0 && distance <= STOP_DISTANCE_CM);
+
+
+    if (obstacle) {
+        motors_coast(); 
+    } else if (is_test_forward_active()) {
+        motors_set_speed(185);
         motors_forward();
     } else {
         motors_coast();
