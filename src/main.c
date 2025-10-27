@@ -1,11 +1,12 @@
 #include <Arduino.h>
+#include <HardwareSerial.h> // for Serial debugging
 #include "motors.h"
 #include "buttons.h"
 #include "echo.h"
 
 // Define pins for ultrasonic sensor
 const int TRIG_PIN = 8;
-const int ECHO_PIN = 9;
+const int ECHO_PIN = 7;
 const int STOP_DISTANCE_CM = 10;  // Stop if object closer than 10 cm
 
 void setup() {
