@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-void line_init(left, right, middle, LINE_LED);
+void line_init();
 void line_update();
 
 #endif
