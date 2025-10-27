@@ -1,6 +1,5 @@
 #include "motors.h"
 #include <Arduino.h>
-#include <HardwareSerial.h> // for Serial debugging
 
 // Motor pins (all PWM capable)
 const int IN4 = 10;
@@ -17,8 +16,7 @@ void motors_init() {
     pinMode(IN3, OUTPUT);
     pinMode(IN4, OUTPUT);
 
-    motors_coast(); 
-    Serial.begin(9600); 
+    motors_coast();
 }
 
 void motors_set_speed(int speed) {
