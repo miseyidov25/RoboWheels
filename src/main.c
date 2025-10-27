@@ -5,7 +5,7 @@
 
 // Define pins for ultrasonic sensor
 const int TRIG_PIN = 8;
-const int ECHO_PIN = 9;
+const int ECHO_PIN = 7;
 const int STOP_DISTANCE_CM = 10;  // Stop if object closer than 10 cm
 
 void setup() {
@@ -30,5 +30,6 @@ void loop() {
         motors_coast();
     }
 
-    delay(30); // Small delay for stability
+    // --- LED control ---
+    leds_update(now, is_forward_pressed(), is_reverse_pressed(), is_left_pressed(), is_right_pressed());
 }
