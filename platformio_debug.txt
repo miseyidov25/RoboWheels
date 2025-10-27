@@ -1,2 +1,0 @@
-Processing ATmega328P (platform: atmelavr; board: ATmega328P; framework: arduino; upload_command: pymcuprog write -i isp -f $SOURCE --erase --verify)
---------------------------------------------------------------------------------

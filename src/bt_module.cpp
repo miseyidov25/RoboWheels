@@ -1,30 +1,13 @@
 #include <Arduino.h>
 #include "bt.h"
+#include "motors.h"
 
-// Motor pins
-#define IN1 7;
-#define IN2 6;
-#define IN3 4:
-#define IN4 2;
-#define ENA 3;
-#define ENB 5;
-
-void setup() {
+void bt_init() {
   Serial.begin(9600);
-
-  pinMode(IN1, OUTPUT);
-  pinMode(IN2, OUTPUT);
-  pinMode(IN3, OUTPUT);
-  pinMode(IN4, OUTPUT);
-  pinMode(ENA, OUTPUT);
-  pinMode(ENB, OUTPUT);
-
-  analogWrite(ENA, 255);
-  analogWrite(ENB, 255);
-  motors_coast();
+  
 }
 
-void loop() {
+void bt_update() {
   if (Serial.available()) {
     char cmd = Serial.read();
     Serial.print("Got: ");

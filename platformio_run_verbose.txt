@@ -1,9 +1,0 @@
-﻿Processing ATmega328P (platform: atmelavr; board: ATmega328P; framework: arduino; upload_command: pymcuprog write -i isp -f $SOURCE --erase --verify)
---------------------------------------------------------------------------------
-C:\Users\wikto\.platformio\penv\Scripts\platformio.exe : MissingPackageManifestError: Could not find one of 'package.json' manifest files in the package
-At line:1 char:1
-+ C:\Users\wikto\.platformio\penv\Scripts\platformio.exe run -v 2>&1 |  ...
-+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (MissingPackageM... in the package:String) [], RemoteException
-    + FullyQualifiedErrorId : NativeCommandError
- 
