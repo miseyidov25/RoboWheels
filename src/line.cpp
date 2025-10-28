@@ -33,43 +33,18 @@ void line_update(){
     motors_brake();
   }
   else if(leftSensor == 0 && middleSensor == 0 && rightSensor == 1){  // Right sensor off line - turn left
-    if(currentMillis - previousMillis >= 100){
-      previousMillis = currentMillis;
-      ledState = !ledState;
-      digitalWrite(LINE_LED, ledState);
-    }
     motors_left();
   }
   else if(leftSensor == 1 && middleSensor == 0 && rightSensor == 0){  // Left sensor off line - turn right
-    if(currentMillis - previousMillis >= 500){
-      previousMillis = currentMillis;
-      ledState = !ledState;
-      digitalWrite(LINE_LED, ledState);
-    }
     motors_right();
   }
   else if(leftSensor == 1 && middleSensor == 0 && rightSensor == 1){  // Only middle on line - forward
-    if(currentMillis - previousMillis >= 300){
-      previousMillis = currentMillis;
-      ledState = !ledState;
-      digitalWrite(LINE_LED, ledState);
-    }
     motors_forward();
   }
   else if(leftSensor == 0 && middleSensor == 1 && rightSensor == 1){  // Only left on line - turn left
-    if(currentMillis - previousMillis >= 200){
-      previousMillis = currentMillis;
-      ledState = !ledState;
-      digitalWrite(LINE_LED, ledState);
-    }
     motors_left();
   }
   else if(leftSensor == 1 && middleSensor == 1 && rightSensor == 0){  // Only right on line - turn 
-    if(currentMillis - previousMillis >= 400){
-      previousMillis = currentMillis;
-      ledState = !ledState;
-      digitalWrite(LINE_LED, ledState);
-    }
     motors_right();
   }
 }
