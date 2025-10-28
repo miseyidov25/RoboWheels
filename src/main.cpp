@@ -20,7 +20,7 @@ void setup() {
 void loop() {
     buttons_update();     // Update button state (handle debounce & toggle)
     bt_update(); // Update Bluetooth commands
-    void line_update(); // Update line following logic
+    line_update(); // Update line following logic
     
     unsigned long now = millis();  // Get current time
     int distance = echo_getDistance();
