@@ -24,13 +24,12 @@ void line_update(){
   bool rightSensor = !digitalRead(right);
   unsigned long currentMillis = millis();
 
-  if(leftSensor == 1 && middleSensor == 1 && rightSensor == 1){  // All sensors on line - forward
-    digitalWrite(LINE_LED, HIGH);
+  if(leftSensor == 0 && middleSensor == 1 && rightSensor == 0){  // Only middle on line - forward
     motors_forward();
   }
   else if(leftSensor == 0 && middleSensor == 0 && rightSensor == 0){  // All sensors off line - stop
     digitalWrite(LINE_LED, HIGH);
-    motors_brake();
+    motors_coast();
   }
   else if(leftSensor == 1 && middleSensor == 1 && rightSensor == 0){  // Right sensor off line - turn left
     motors_left();
@@ -38,9 +37,11 @@ void line_update(){
   else if(leftSensor == 0 && middleSensor == 1 && rightSensor == 1){  // Left sensor off line - turn right
     motors_right();
   }
-  else if(leftSensor == 0 && middleSensor == 1 && rightSensor == 0){  // Only middle on line - forward
+  else if(leftSensor == 1 && middleSensor == 1 && rightSensor == 1){  // All sensors on line - forward
+    digitalWrite(LINE_LED, HIGH);
     motors_forward();
   }
+
   else if(leftSensor == 1 && middleSensor == 0 && rightSensor == 0){  // Only left on line - turn left
     motors_left();
   }
