@@ -22,13 +22,15 @@ void leds_update(unsigned long now, bool fwd, bool rev, bool left, bool right) {
     digitalWrite(LED_B, LOW);
 
     // Left turn signal
+    // Left turn signal: light continuously while turning left
     if (left) {
-        if ((now / BLINK_INTERVAL) % 2 == 0) digitalWrite(LED_L, HIGH);
+        digitalWrite(LED_L, HIGH);
     }
 
     // Right turn signal
+    // Right turn signal: light continuously while turning right
     if (right) {
-        if ((now / BLINK_INTERVAL) % 2 == 0) digitalWrite(LED_R, HIGH);
+        digitalWrite(LED_R, HIGH);
     }
 
     // Brake LED
