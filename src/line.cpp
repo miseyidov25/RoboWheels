@@ -41,7 +41,6 @@ void line_update(){
     digitalWrite(LINE_LED, HIGH);
     motors_forward();
   }
-
   else if(leftSensor == 1 && middleSensor == 0 && rightSensor == 0){  // Only left on line - turn left
     motors_left();
   }
