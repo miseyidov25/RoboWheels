@@ -18,7 +18,7 @@ static const unsigned char bluetooth_bmp[] U8X8_PROGMEM = {
 
 // Menu states
 #define MENU_MAIN 0
-#define MODE_A 1
+#define MODE_A 1  
 #define MODE_B 2
 #define MODE_C 3
 
@@ -59,7 +59,6 @@ void oled_init() {
   u8g2.clearBuffer();
   u8g2.drawStr(15, 30, "Init...");
   u8g2.sendBuffer();
-  delay(1000);
 }
 
 void setup_pins() {
@@ -257,5 +256,4 @@ void loop() {
   }
 
   update_display();
-  delay(50);
 }
