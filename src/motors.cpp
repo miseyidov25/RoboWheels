@@ -8,7 +8,7 @@ const int IN2 = 6;
 const int IN3 = 5;
 
 // Motor speed (0–255)
-int motorSpeed = 185;
+int motorSpeed = 160;
 
 void motors_init() {
     pinMode(IN1, OUTPUT);
