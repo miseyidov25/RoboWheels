@@ -20,20 +20,30 @@ void setup() {
 void loop() {
     buttons_update();     // Update button state (handle debounce & toggle)
     bt_update(); // Update Bluetooth commands
-    line_update(); // Update line following logic
     
     unsigned long now = millis();  // Get current time
     int distance = echo_getDistance();
     bool obstacle = (distance > 0 && distance <= STOP_DISTANCE_CM);
 
-    if (obstacle) {
-        motors_coast(); 
-    } else if (is_test_forward_active()) {
-        motors_set_speed(185);
-        motors_forward();
-    } else {
-        motors_coast();
+
+    // If the test button is ON, drive forward
+    if (is_test_forward_active()) {
+        if (obstacle) {
+            motors_brake();
+        } else {
+            motors_set_speed(185);
+            motors_forward();
+        }
+    } 
+    // Otherwise, use line-following mode
+    else {
+        if (obstacle) {
+            motors_brake();
+        } else {
+            line_update();
+        }
     }
+
 
     // --- LED control ---
     leds_update(now, is_test_forward_active(), false, false, false);
