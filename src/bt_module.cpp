@@ -14,12 +14,12 @@ void bt_update() {
     Serial.println(cmd);
 
     switch (cmd) {
-      case 'F': motors_forward(); break;
-      case 'B': motors_reverse(); break;
-      case 'L': motors_left();    break;
-      case 'R': motors_right();   break;
-      case 'S': motors_brake();   break;
-      case 'C': motors_coast();   break;
+      case 'F': motors_set_speed(185); motors_forward(); break;
+      case 'B': motors_set_speed(185); motors_reverse(); break;
+      case 'L': motors_set_speed(185); motors_left();    break;
+      case 'R': motors_set_speed(185); motors_right();   break;
+      case 'S': motors_set_speed(185); motors_brake();   break;
+      case 'C': motors_set_speed(185); motors_coast();   break;
       default:  /* ignore */      break;
     }
   }
