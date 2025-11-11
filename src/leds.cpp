@@ -1,9 +1,10 @@
+/*
 #include "leds.h"
 #include <Arduino.h>
 
 // Turn signal LED pins (moved away from motor PWM pins)
-#define LED_TURN_L 2
-#define LED_TURN_R 3
+#define LED_TURN_L 
+#define LED_TURN_R 
 
 // RGB LED pins
 #define LED_RGB_R 11
@@ -66,3 +67,4 @@ void leds_update(unsigned long now, bool fwd, bool rev, bool left, bool right, i
             break;
     }
 }
+*/

@@ -5,7 +5,6 @@
 #include "leds.h"
 #include "bt.h"
 #include "line.h"
-#include "menu.h"
 
 // Define pins for ultrasonic sensor
 const int TRIG_PIN = 8;
@@ -16,7 +15,7 @@ void setup() {
     motors_init();        // Initialize motor pins
     buttons_init();       // Initialize test button
     line_init();          // Initialize line sensors
-    leds_init();          // Initialize LEDs
+/*    leds_init();          // Initialize LEDs */
 }
 
 void loop() {
@@ -45,9 +44,4 @@ void loop() {
             line_update();
         }
     }
-
-
-    // --- LED control ---
-    int mode = menu_get_mode();
-    leds_update(now, is_test_forward_active(), false, false, false, mode);
 }

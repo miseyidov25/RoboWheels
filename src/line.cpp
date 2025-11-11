@@ -3,9 +3,9 @@
 #include "buttons.h"
 #include "line.h"
 
-#define left 13
-#define right 11
-#define middle 12
+#define left 4
+#define middle 3
+#define right 2
 #define LINE_LED 13
 
 static unsigned long previousMillis = 0;
