@@ -26,11 +26,9 @@ void loop() {
     bool obstacle = (distance > 0 && distance <= STOP_DISTANCE_CM);
 
     if (obstacle) {
-        motors_coast(); 
-    } else if (is_test_forward_active()) {
-        motors_set_speed(185);
-        motors_forward();
-    } else {
+        motors_coast();
+        motors_reverse();
+        delay(100);
         motors_coast();
     }
 

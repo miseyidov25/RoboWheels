@@ -10,6 +10,10 @@ const int IN3 = 5;
 // Motor speed (0–255)
 int motorSpeed = 185;
 
+// Speed levels for Bluetooth control
+int speedLevels[] = {120, 150, 185, 220};
+int currentSpeedIndex = 2;  // default = f3 (185)
+
 void motors_init() {
     pinMode(IN1, OUTPUT);
     pinMode(IN2, OUTPUT);
