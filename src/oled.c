@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include <U8g2lib.h>
 #include <EEPROM.h>
-#include "ui.h" // Our custom header file
+#include "oled.h" // Our custom header file
 
 // ===================== PIN CONFIGURATION =====================
 
