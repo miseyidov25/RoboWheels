@@ -1,68 +1,96 @@
 #include "motors.h"
+#include <Arduino.h>
 
-// Motor pins
-const int IN1 = 7;
+// Motor pins (all PWM capable, based on pin reference)
+const int IN4 = 10;
+const int IN1 = 9;
 const int IN2 = 6;
-const int IN3 = 4;
-const int IN4 = 2;
-const int ENA = 3;  // PWM pin for left motor
-const int ENB = 5;  // PWM pin for right motor
+const int IN3 = 5;
 
-// Motor speed (0-255)
-int motorSpeed = 185;
-
+// Motor speed (0–255)
+static int motorSpeed = 185;
+static MotorDirection currentDirection = MOTOR_DIR_STOPPED;
 
 void motors_init() {
     pinMode(IN1, OUTPUT);
     pinMode(IN2, OUTPUT);
     pinMode(IN3, OUTPUT);
     pinMode(IN4, OUTPUT);
-    pinMode(ENA, OUTPUT);
-    pinMode(ENB, OUTPUT);
 
     motors_coast();
-    analogWrite(ENA, motorSpeed);
-    analogWrite(ENB, motorSpeed);
 }
 
 void motors_set_speed(int speed) {
     motorSpeed = constrain(speed, 0, 255);
-    analogWrite(ENA, motorSpeed);
-    analogWrite(ENB, motorSpeed);
+}
+
+int motors_get_speed() {
+    return motorSpeed;
+}
+
+MotorDirection motors_get_direction() {
+    return currentDirection;
 }
 
 void motors_forward() {
-    digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);
-    digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);
+    currentDirection = MOTOR_DIR_FORWARD;
+    // Left motor: IN1 forward, IN2 reverse
+    analogWrite(IN1, motorSpeed);
+    analogWrite(IN2, 0);
+
+    // Right motor: IN3 forward, IN4 reverse
+    analogWrite(IN3, motorSpeed);
+    analogWrite(IN4, 0);
 }
 
 void motors_reverse() {
-    digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH);
-    digitalWrite(IN3, LOW); digitalWrite(IN4, HIGH);
+    currentDirection = MOTOR_DIR_REVERSE;
+    analogWrite(IN1, 0);
+    analogWrite(IN2, motorSpeed);
+    analogWrite(IN3, 0);
+    analogWrite(IN4, motorSpeed);
 }
 
 void motors_left() {
-    digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH);
-    digitalWrite(IN3, HIGH); digitalWrite(IN4, LOW);
+    currentDirection = MOTOR_DIR_LEFT;
+    // Left motor backward, right motor forward
+    analogWrite(IN1, 0);
+    analogWrite(IN2, motorSpeed);
+    analogWrite(IN3, motorSpeed);
+    analogWrite(IN4, 0);
 }
 
 void motors_right() {
-    digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);
-    digitalWrite(IN3, LOW); digitalWrite(IN4, HIGH);
+    currentDirection = MOTOR_DIR_RIGHT;
+    // Left motor forward, right motor backward
+    analogWrite(IN1, motorSpeed);
+    analogWrite(IN2, 0);
+    analogWrite(IN3, 0);
+    analogWrite(IN4, motorSpeed);
 }
 
 void motors_brake() {
-    digitalWrite(IN1, HIGH); digitalWrite(IN2, HIGH);
-    digitalWrite(IN3, HIGH); digitalWrite(IN4, HIGH);
+    currentDirection = MOTOR_DIR_BRAKE;
+    // Both pins high - electrical brake
+    analogWrite(IN1, 255);
+    analogWrite(IN2, 255);
+    analogWrite(IN3, 255);
+    analogWrite(IN4, 255);
 }
 
 void motors_coast() {
-    digitalWrite(IN1, LOW); digitalWrite(IN2, LOW);
-    digitalWrite(IN3, LOW); digitalWrite(IN4, LOW);
+    currentDirection = MOTOR_DIR_COAST;
+    // All pins low - free spin
+    analogWrite(IN1, 0);
+    analogWrite(IN2, 0);
+    analogWrite(IN3, 0);
+    analogWrite(IN4, 0);
 }
 
-// High-level update called from main
 void motors_update(bool fwd) {
-    if (fwd) motors_forward();
-    else motors_coast();
+    if (fwd) {
+        motors_forward();
+    } else {
+        motors_coast();
+    }
 }
