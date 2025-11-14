@@ -9,7 +9,6 @@
 const int TRIG_PIN = 8;
 const int ECHO_PIN = 7;
 const int STOP_DISTANCE_CM = 10;  // Stop if object closer than 10 cm
-bool btControlled = true;
 
 void setup() {
     motors_init();        // Initialize motor pins

@@ -12,6 +12,9 @@ void motors_right();
 void motors_brake();
 void motors_coast();
 
+extern int speedLevels[];
+extern int currentSpeedIndex;
+
 // High-level update function for main loop
 void motors_update(bool fwd);
 
