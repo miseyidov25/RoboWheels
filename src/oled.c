@@ -1,259 +1,313 @@
 #include <Wire.h>
 #include <U8g2lib.h>
 #include <EEPROM.h>
+#include "ui.h" // Our custom header file
 
-U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+// ===================== PIN CONFIGURATION =====================
 
-// Button Pins
-#define BTN_FWD 11
-#define BTN_REV 12
-#define BTN_LFT 10
-#define BTN_RST 21
+// Buttons
+static const uint8_t BTN_NEXT_PIN   = 2;   // Button to cycle through modes
+static const uint8_t BTN_SELECT_PIN = 3;   // Button to enter/confirm selection
 
-// Bluetooth icon bitmap
-static const unsigned char bluetooth_bmp[] U8X8_PROGMEM = {
-  0b00011000, 0b00100100, 0b01011010, 0b00011000,
-  0b00011000, 0b01011010, 0b00100100, 0b00011000
-};
+// OLED: standard I2C SSD1306 128x64 on A4(SDA), A5(SCL)
+static U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(
+    U8G2_R0,        // rotation
+    U8X8_PIN_NONE   // reset pin
+);
 
-// Menu states
-#define MENU_MAIN 0
-#define MODE_A 1  
-#define MODE_B 2
-#define MODE_C 3
+// ===================== INTERNAL STATE VARIABLES =====================
 
-// Button struct
-struct Button {
-  uint8_t pin;
-  uint8_t last_state;
-  uint8_t current_state;
-  unsigned long last_change_time;
-};
+static Mode currentMode   = MODE_AUTONOMOUS;   // Active mode
+static Mode menuSelection = MODE_AUTONOMOUS;   // Highlighted in menu
 
-Button btn_fwd = {BTN_FWD, HIGH, HIGH, 0};
-Button btn_rev = {BTN_REV, HIGH, HIGH, 0};
-Button btn_lft = {BTN_LFT, HIGH, HIGH, 0};
-Button btn_rst = {BTN_RST, HIGH, HIGH, 0};
+static bool menuActive      = false;   // true = menu, false = status
+static bool hasSelectedMode = false;   // did we ever select a mode?
 
-// Global state
-uint8_t current_menu = MENU_MAIN;
-uint8_t selected_mode = 0;
-uint8_t menu_cursor = 1;  // Cursor position in menu (1=A, 2=B, 3=C)
-bool mode_locked = false;  // Once mode is selected, it's locked
-uint32_t runtime = 0;
-unsigned long last_tick = 0;
-unsigned long last_save = 0;
-bool needs_save = false;
-bool bt_connected = true;
-uint8_t speed_percent = 45;  // Random speed value
+// Button edge detection (for INPUT_PULLUP, so idle = HIGH, pressed = LOW)
+static bool lastNextState   = HIGH;
+static bool lastSelectState = HIGH;
 
-const unsigned long DEBOUNCE_DELAY = 20;
-const unsigned long SAVE_INTERVAL = 60000;
-const int EEPROM_ADDR = 0;
+// Runtime (total active time in seconds)
+static uint32_t totalSeconds = 0;
 
-// ===== INITIALIZATION =====
+// For millis() timing
+static unsigned long lastSecondTick = 0;
 
-void oled_init() {
-  u8g2.begin();
-  u8g2.setFont(u8g2_font_6x12_tf);
+// EEPROM address for saving totalSeconds (4 bytes)
+static const int EEPROM_ADDR_TOTAL_SECONDS = 0;
+static bool eepromDirty = false;
+static unsigned long lastEepromWrite = 0;
+static const unsigned long EEPROM_WRITE_INTERVAL_MS = 10000UL; // write every 10s
+
+
+// ===================== FORWARD DECLARATIONS (Internal Functions) =====================
+
+static const char* modeToString(Mode m);
+static void drawMenuScreen();
+static void drawStatusScreen();
+static void readButtons();
+static void updateRuntime();
+static void saveTotalSecondsToEEPROM();
+
+
+// ===================== PLACEHOLDERS: DIRECTION & SPEED =====================
+// These functions are only used by the UI module for display.
+// TODO: Connect them to your robot's actual logic.
+
+static const char* getCurrentDirection()
+{
+  // e.g. "Forward", "Backward", "Left", "Right", "Stopped"
+  return "Forward";
+}
+
+static int getCurrentSpeed()
+{
+  // e.g. PWM 0–255
+  return 128; // placeholder
+}
+
+// ===================== HELPER FUNCTIONS =====================
+
+static const char* modeToString(Mode m)
+{
+  switch (m) {
+    case MODE_AUTONOMOUS: return "Autonomous";
+    case MODE_SLAVE:      return "Slave";
+    case MODE_REMOTE:     return "Remote";
+    default:              return "Unknown";
+  }
+}
+
+static void formatTime(uint32_t seconds, char* buffer, size_t len)
+{
+  uint32_t h = seconds / 3600;
+  uint32_t m = (seconds % 3600) / 60;
+  uint32_t s = seconds % 60;
+  snprintf(buffer, len, "%02lu:%02lu:%02lu",
+           (unsigned long)h,
+           (unsigned long)m,
+           (unsigned long)s);
+}
+
+// ===================== EEPROM HANDLING =====================
+
+static void loadTotalSecondsFromEEPROM()
+{
+  uint32_t value = 0;
+  for (int i = 0; i < 4; ++i) {
+    uint8_t b = EEPROM.read(EEPROM_ADDR_TOTAL_SECONDS + i);
+    value |= ((uint32_t)b << (8 * i));
+  }
+  totalSeconds = value;
+}
+
+static void saveTotalSecondsToEEPROM()
+{
+  uint32_t value = totalSeconds;
+  for (int i = 0; i < 4; ++i) {
+    uint8_t b = (value >> (8 * i)) & 0xFF;
+    EEPROM.update(EEPROM_ADDR_TOTAL_SECONDS + i, b);
+  }
+}
+
+// ===================== DRAWING FUNCTIONS =====================
+
+static void drawStatusScreen()
+{
   u8g2.clearBuffer();
-  u8g2.drawStr(15, 30, "Init...");
+  u8g2.setFont(u8g2_font_6x13_tr);
+
+  // 1) Top line: active mode
+  u8g2.setCursor(0, 12);
+  u8g2.print("Mode: ");
+  u8g2.print(modeToString(currentMode));
+
+  // 2) Direction
+  u8g2.setCursor(0, 28);
+  u8g2.print("Dir : ");
+  u8g2.print(getCurrentDirection());
+
+  // 3) Speed
+  u8g2.setCursor(0, 44);
+  u8g2.print("Spd : ");
+  u8g2.print(getCurrentSpeed());
+  u8g2.print(" (PWM)");
+
+  // 4) Time
+  char buf[16];
+  formatTime(totalSeconds, buf, sizeof(buf));
+  u8g2.setCursor(0, 60);
+  u8g2.print("Time: ");
+  u8g2.print(buf);
+
   u8g2.sendBuffer();
 }
 
-void setup_pins() {
-  pinMode(BTN_FWD, INPUT_PULLUP);
-  pinMode(BTN_REV, INPUT_PULLUP);
-  pinMode(BTN_LFT, INPUT_PULLUP);
-  pinMode(BTN_RST, INPUT_PULLUP);
-}
-
-// ===== BUTTON HANDLING =====
-
-bool button_pressed(Button &btn) {
-  int reading = digitalRead(btn.pin);
-
-  if (reading != btn.last_state) {
-    btn.last_change_time = millis();
-  }
-
-  if ((millis() - btn.last_change_time) > DEBOUNCE_DELAY) {
-    if (reading != btn.current_state) {
-      btn.current_state = reading;
-      if (btn.current_state == LOW) {
-        btn.last_state = reading;
-        return true;
-      }
-    }
-  }
-
-  btn.last_state = reading;
-  return false;
-}
-
-// ===== DISPLAY FUNCTIONS =====
-
-void draw_main_menu() {
+static void drawMenuScreen()
+{
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_6x12_tf);
-  u8g2.drawStr(25, 12, "SELECT MODE");
-  u8g2.drawLine(0, 14, 128, 14);
+  u8g2.setFont(u8g2_font_6x13_tr);
 
-  // Mode A with cursor
-  if (menu_cursor == 1) {
-    u8g2.drawBox(10, 26, 90, 10);
-    u8g2.setDrawColor(0);
-    u8g2.drawStr(15, 32, "Mode A");
-    u8g2.setDrawColor(1);
+  // Title
+  u8g2.setCursor(0, 12);
+  if (!hasSelectedMode) {
+    u8g2.print("Select mode to start:");
   } else {
-    u8g2.drawStr(15, 32, "Mode A");
+    u8g2.print("Select mode:");
   }
 
-  // Mode B with cursor
-  if (menu_cursor == 2) {
-    u8g2.drawBox(10, 39, 90, 10);
-    u8g2.setDrawColor(0);
-    u8g2.drawStr(15, 45, "Mode B");
-    u8g2.setDrawColor(1);
-  } else {
-    u8g2.drawStr(15, 45, "Mode B");
-  }
+  // List of modes with arrow for selected
+  int startY = 28;
+  const int lineHeight = 14;
 
-  // Mode C with cursor
-  if (menu_cursor == 3) {
-    u8g2.drawBox(10, 52, 90, 10);
-    u8g2.setDrawColor(0);
-    u8g2.drawStr(15, 58, "Mode C");
-    u8g2.setDrawColor(1);
-  } else {
-    u8g2.drawStr(15, 58, "Mode C");
+  for (int i = 0; i < MODE_COUNT; ++i) {
+    int y = startY + i * lineHeight;
+
+    if ((int)menuSelection == i) {
+      u8g2.setCursor(0, y);
+      u8g2.print(">");
+    }
+
+    u8g2.setCursor(12, y);
+    u8g2.print(modeToString((Mode)i));
   }
 
   u8g2.sendBuffer();
 }
 
-void draw_mode_screen(uint8_t mode) {
+static void drawSplashScreen()
+{
   u8g2.clearBuffer();
-  u8g2.setFont(u8g2_font_6x12_tf);
+  u8g2.setFont(u8g2_font_6x13_tr);
 
-  if (bt_connected) {
-    u8g2.drawXBMP(0, 0, 8, 8, bluetooth_bmp);
-    u8g2.drawStr(12, 8, "BT OK");
-  } else {
-    u8g2.drawStr(0, 8, "BT No");
-  }
-  u8g2.drawLine(0, 10, 128, 10);
+  u8g2.setCursor(0, 24);
+  u8g2.print("RoboWheel");
+  u8g2.setCursor(0, 40);
+  u8g2.print("Mode Selection First");
 
-  u8g2.drawStr(5, 25, "Mode: ");
-  u8g2.setFont(u8g2_font_8x13_tf);
-  if (mode == 1) u8g2.drawStr(40, 28, "A");
-  else if (mode == 2) u8g2.drawStr(40, 28, "B");
-  else if (mode == 3) u8g2.drawStr(40, 28, "C");
-
-  u8g2.setFont(u8g2_font_6x12_tf);
-  char buf[20];
-  snprintf(buf, sizeof(buf), "Time: %lus", runtime);
-  u8g2.drawStr(5, 40, buf);
-
-  snprintf(buf, sizeof(buf), "Speed: %d%%", speed_percent);
-  u8g2.drawStr(5, 52, buf);
-
-  //u8g2.drawStr(30, 64, "RST -> Menu");
   u8g2.sendBuffer();
 }
 
-// ===== STATE HANDLING =====
+// ===================== BUTTON HANDLING =====================
 
-void handle_input() {
-  if (button_pressed(btn_fwd)) {
-    if (current_menu == MENU_MAIN) {
-      // Navigate down through modes
-      if (menu_cursor < 3) menu_cursor++;
-      Serial.println("FWD - Navigate Down");
-    }
-  }
-
-  if (button_pressed(btn_rev)) {
-    if (current_menu == MENU_MAIN) {
-      // Navigate up through modes
-      if (menu_cursor > 1) menu_cursor--;
-      Serial.println("REV - Navigate Up");
-    }
-  }
-
-  if (button_pressed(btn_lft)) {
-    if (current_menu == MENU_MAIN) {
-      // Select current mode
-      selected_mode = menu_cursor;
-      current_menu = menu_cursor;
-      Serial.print("LFT - Select Mode: ");
-      Serial.println(menu_cursor);
-    }
-  }
-
-  if (button_pressed(btn_rst)) {
-    // Always return to menu
-    Serial.println("RST - Back to Menu");
-    current_menu = MENU_MAIN;
-    selected_mode = 0;
-    menu_cursor = 1;
-    runtime = 0;
+static void handleNextPressed()
+{
+  // Only in menu: cycle through modes
+  if (menuActive) {
+    int idx = (int)menuSelection;
+    idx = (idx + 1) % MODE_COUNT;   // 0→1→2→0
+    menuSelection = (Mode)idx;
   }
 }
 
-void update_display() {
-  if (current_menu == MENU_MAIN) {
-    draw_main_menu();
+static void handleSelectPressed()
+{
+  if (menuActive) {
+    // CONFIRM selection → activate mode + go to status
+    currentMode     = menuSelection;
+    hasSelectedMode = true;
+    menuActive      = false;
   } else {
-    draw_mode_screen(current_menu);
+    // We are on status screen → re-open menu
+    menuActive    = true;
+    menuSelection = currentMode;
   }
 }
 
-// ===== EEPROM =====
+static void readButtons()
+{
+  bool currentNext   = digitalRead(BTN_NEXT_PIN);
+  bool currentSelect = digitalRead(BTN_SELECT_PIN);
 
-void save_runtime(uint32_t value) {
-  uint32_t saved;
-  EEPROM.get(EEPROM_ADDR, saved);
-  if (abs((long)(value - saved)) > 1) {
-    EEPROM.put(EEPROM_ADDR, value);
+  // Active LOW (INPUT_PULLUP): press = HIGH -> LOW
+  if (lastNextState == HIGH && currentNext == LOW) {
+    handleNextPressed();
   }
-}
 
-uint32_t load_runtime() {
-  uint32_t saved = 0;
-  EEPROM.get(EEPROM_ADDR, saved);
-  if (saved == 0xFFFFFFFF || saved > 864000) {
-    saved = 0;
-    EEPROM.put(EEPROM_ADDR, saved);
+  if (lastSelectState == HIGH && currentSelect == LOW) {
+    handleSelectPressed();
   }
-  return saved;
+
+  lastNextState   = currentNext;
+  lastSelectState = currentSelect;
 }
 
-// ===== MAIN =====
+// ===================== TIME & LOOP LOGIC =====================
 
-void setup() {
-  Serial.begin(9600);
-  setup_pins();
-  oled_init();
-  runtime = load_runtime();
-}
-
-void loop() {
+static void updateRuntime()
+{
+  // This function only tracks time when a mode is active
+  if (!hasSelectedMode) return;
+    
   unsigned long now = millis();
 
-  handle_input();
-
-  if (current_menu != MENU_MAIN && (now - last_tick >= 1000)) {
-    runtime++;
-    last_tick = now;
-    needs_save = true;
+  if (now - lastSecondTick >= 1000UL) {
+    lastSecondTick += 1000UL;
+    totalSeconds++;
+    eepromDirty = true;
   }
 
-  if (needs_save && (now - last_save >= SAVE_INTERVAL)) {
-    save_runtime(runtime);
-    last_save = now;
-    needs_save = false;
+  if (eepromDirty && (now - lastEepromWrite >= EEPROM_WRITE_INTERVAL_MS)) {
+    saveTotalSecondsToEEPROM();
+    lastEepromWrite = now;
+    eepromDirty = false;
+  }
+}
+
+// ===================== PUBLIC FUNCTIONS (Definitions) =====================
+
+void ui_init()
+{
+  // Buttons
+  pinMode(BTN_NEXT_PIN,   INPUT_PULLUP);
+  pinMode(BTN_SELECT_PIN, INPUT_PULLUP);
+
+  // OLED
+  u8g2.begin();
+
+  // Load total time from EEPROM
+  loadTotalSecondsFromEEPROM();
+
+  // Initial button states
+  lastNextState   = digitalRead(BTN_NEXT_PIN);
+  lastSelectState = digitalRead(BTN_SELECT_PIN);
+
+  // Optional splash
+  drawSplashScreen();
+  delay(1500);
+
+  // REQUIREMENT: at first it must have mode selection
+  menuActive      = true;           // start in menu
+  hasSelectedMode = false;          // no mode chosen yet
+  currentMode     = MODE_AUTONOMOUS; // default mode
+  menuSelection   = currentMode;     // cursor on default
+}
+
+void ui_update()
+{
+  updateRuntime();
+  readButtons();
+
+  // Always show menu until user selects a mode once.
+  if (menuActive) {
+    drawMenuScreen();
+  } else {
+    drawStatusScreen();
   }
 
-  update_display();
+  delay(20); // Small delay to debounce and save power
+}
+
+Mode ui_get_current_mode()
+{
+  // If no mode is selected yet, return the default.
+  // Or you could define a "NONE" or "MENU" state.
+  // Here, we only consider the mode valid when the menu is inactive.
+  if (menuActive) {
+      // If we are in the menu, return the last active mode
+      // but you might signal the robot to do nothing (e.g., by returning MODE_COUNT)
+      // For now, just return the selected mode.
+      return currentMode;
+  }
+  return currentMode;
 }
