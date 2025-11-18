@@ -1,37 +1,52 @@
 #include <Arduino.h>
+#include "pins.h"
 #include "motors.h"
-#include "buttons.h"
-#include "echo.h"
-#include "leds.h"
+#include "line.h"
 #include "bt.h"
 
-// Define pins for ultrasonic sensor
-const int TRIG_PIN = 8;
-const int ECHO_PIN = 7;
-const int STOP_DISTANCE_CM = 10;  // Stop if object closer than 10 cm
+// === Mode Control ===
+enum Mode { MANUAL, AUTONOMOUS };
+Mode currentMode = MANUAL;
 
-void setup() {
-    motors_init();        // Initialize motor pins
-    buttons_init();       // Initialize test button
-    echo_init(TRIG_PIN, ECHO_PIN); // Ultrasonic sensor
-    bt_init();      // Initialize Bluetooth module
+// === Speed Control ===
+// Define the motorSpeed variables exactly once, here:
+int motorSpeed = 230;        // Adjust speed here for MANUAL (0–255)
+int motorSpeedAuto = 110;    // Adjust speed here for AUTONOMOUS (0–255)
+
+// === Timing for LED Blink ===
+unsigned long previousMillis = 0;
+
+// helper to return current effective speed depending on mode
+int currentEffectiveSpeed() {
+  return (currentMode == AUTONOMOUS) ? motorSpeedAuto : motorSpeed;
 }
 
+// === Setup ===
+void setup() {
+  Serial.begin(9600);  // HC-05 default baud rate
+
+  // initialize motors module (pins + coast)
+  motors_init();
+
+  // Line sensor pins
+  pinMode(LEFT_SENSOR, INPUT);
+  pinMode(MIDDLE_SENSOR, INPUT);
+  pinMode(RIGHT_SENSOR, INPUT);
+  pinMode(LINE_LED, OUTPUT);
+
+  bt_init();
+}
+
+// === Main Loop ===
 void loop() {
-    buttons_update();     // Update button state (handle debounce & toggle)
-    bt_update(); // Update Bluetooth commands
-    
-    unsigned long now = millis();  // Get current time
-    int distance = echo_getDistance();
-    bool obstacle = (distance > 0 && distance <= STOP_DISTANCE_CM);
+  // handle Bluetooth / serial commands
+  bt_update();
 
-    if (obstacle) {
-        motors_coast();
-        motors_reverse();
-        delay(100);
-        motors_coast();
-    }
+  // Autonomous line-following mode
+  if (currentMode == AUTONOMOUS) {
+    line_update();
+    return; // skip manual commands while autonomous
+  }
 
-    // --- LED control ---
-    leds_update(now, is_test_forward_active(), false, false, false);
+  // If not autonomous, nothing else required — bt_update handles manual movement
 }

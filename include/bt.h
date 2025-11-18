@@ -1,9 +1,7 @@
 #ifndef BT_H
 #define BT_H
 
+void bt_init();
+void bt_update();
 
-// Motor control functions
-void bt_init(void);
-void bt_update(void);
-
-#endif
+#endif // BT_H

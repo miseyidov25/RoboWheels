@@ -2,9 +2,10 @@
 #include "bt.h"
 #include "motors.h"
 
+// NOTE: Serial.begin is done in main.setup() — don't initialize it again here.
+
 void bt_init() {
-  Serial.begin(9600);
-  
+  // nothing here; keep Serial.begin in main
 }
 
 void bt_update() {
@@ -14,7 +15,6 @@ void bt_update() {
     Serial.println(cmd);
 
     switch (cmd) {
-
       // Movement
       case 'F': motors_forward(); break;
       case 'B': motors_reverse(); break;
@@ -23,15 +23,23 @@ void bt_update() {
       case 'S': motors_brake();   break;
       case 'C': motors_coast();   break;
 
-      // Speed control
-      case '1': currentSpeedIndex = 0; break; // f1
-      case '2': currentSpeedIndex = 1; break; // f2
-      case '3': currentSpeedIndex = 2; break; // f3
-      case '4': currentSpeedIndex = 3; break; // f4
+      // Speed control (set index)
+      case '1': currentSpeedIndex = 0; break;
+      case '2': currentSpeedIndex = 1; break;
+      case '3': currentSpeedIndex = 2; break;
+      case '4': currentSpeedIndex = 3; break;
 
       default: break;
     }
 
+    // bounds-check and apply speed safely
+    if (currentSpeedIndex < 0) currentSpeedIndex = 0;
+    if (currentSpeedIndex >= speedLevelsCount) currentSpeedIndex = speedLevelsCount - 1;
+
     motors_set_speed(speedLevels[currentSpeedIndex]);
+
+    // optional feedback
+    Serial.print("Speed set to: ");
+    Serial.println(speedLevels[currentSpeedIndex]);
   }
 }
