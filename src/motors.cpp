@@ -1,6 +1,11 @@
 #include "motors.h"
 #include "pins.h"
 #include <Arduino.h>
+#include "bt.h"    // for currentEffectiveSpeed()
+
+
+extern int currentEffectiveSpeed();  // declare function
+
 
 // Definitions (exactly one definition here for speedLevels and index)
 int speedLevels[] = {120, 150, 185, 220};

@@ -3,50 +3,59 @@
 #include "motors.h"
 #include "line.h"
 #include "bt.h"
+#include "echo.h"
 
-// === Mode Control ===
-enum Mode { MANUAL, AUTONOMOUS };
+// === GLOBAL MODE VARIABLE DEFINED HERE ===
 Mode currentMode = MANUAL;
 
 // === Speed Control ===
-// Define the motorSpeed variables exactly once, here:
-int motorSpeed = 230;        // Adjust speed here for MANUAL (0–255)
-int motorSpeedAuto = 110;    // Adjust speed here for AUTONOMOUS (0–255)
+int motorSpeed = 230;
+int motorSpeedAuto = 110;
 
-// === Timing for LED Blink ===
 unsigned long previousMillis = 0;
 
-// helper to return current effective speed depending on mode
+// make it available to other files:
 int currentEffectiveSpeed() {
-  return (currentMode == AUTONOMOUS) ? motorSpeedAuto : motorSpeed;
+    return (currentMode == AUTONOMOUS) ? motorSpeedAuto : motorSpeed;
 }
 
-// === Setup ===
 void setup() {
-  Serial.begin(9600);  // HC-05 default baud rate
+    Serial.begin(9600);
 
-  // initialize motors module (pins + coast)
-  motors_init();
+    motors_init();
 
-  // Line sensor pins
-  pinMode(LEFT_SENSOR, INPUT);
-  pinMode(MIDDLE_SENSOR, INPUT);
-  pinMode(RIGHT_SENSOR, INPUT);
-  pinMode(LINE_LED, OUTPUT);
+    pinMode(LEFT_SENSOR, INPUT);
+    pinMode(MIDDLE_SENSOR, INPUT);
+    pinMode(RIGHT_SENSOR, INPUT);
+    pinMode(LINE_LED, OUTPUT);
 
-  bt_init();
+    bt_init();
 }
 
-// === Main Loop ===
 void loop() {
-  // handle Bluetooth / serial commands
-  bt_update();
+    bt_update();
 
-  // Autonomous line-following mode
-  if (currentMode == AUTONOMOUS) {
-    line_update();
-    return; // skip manual commands while autonomous
-  }
+    // Autonomous
+    if (currentMode == AUTONOMOUS) {
+        echo_init(TRIG_PIN, ECHO_PIN);
+        int distance_cm = echo_getDistance();
 
-  // If not autonomous, nothing else required — bt_update handles manual movement
+        if(distance_cm > 10) {
+            motors_forward(); 
+            Serial.println("Autonomous Forward");
+        }
+        else if(distance_cm <= 10) {
+            motors_coast();
+            Serial.println("Autonomous Brake");
+        }
+        return;
+    }
+
+    // Slave (line follow)
+    if (currentMode == SLAVE) {
+        line_update();
+        return;
+    }
+
+    // Manual mode → nothing here (Bluetooth handles it)
 }

@@ -8,9 +8,13 @@
 #define IN4 10
 
 // Line sensor pins
-#define LEFT_SENSOR 2
+#define LEFT_SENSOR 4
 #define MIDDLE_SENSOR 3
-#define RIGHT_SENSOR 4
+#define RIGHT_SENSOR 2
 #define LINE_LED 13
+
+#define TRIG_PIN 8
+#define ECHO_PIN 7
+
 
 #endif // PINS_H
