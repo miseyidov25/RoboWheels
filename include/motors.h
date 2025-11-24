@@ -9,7 +9,9 @@ void motors_set_speed(int speed);
 void motors_forward();
 void motors_reverse();
 void motors_left();
+void motors_correctleft();
 void motors_right();
+void motors_correctright();
 void motors_brake();
 void motors_coast();
 
