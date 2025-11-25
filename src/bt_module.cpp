@@ -25,10 +25,12 @@ void bt_update() {
         case 'R': motors_right();   break;
         case 'S': motors_brake();   break;
         case 'C': motors_coast();   break;
+        case 'H': motors_correctright();  break;
+        case 'G': motors_correctleft();   break;
 
         case 'W': currentMode = AUTONOMOUS; break;
         case 'X': currentMode = SLAVE;      break;
-        case 'w': currentMode = MANUAL; break;
+        case 'w': currentMode = MANUAL;     break;
         case 'x': currentMode = MANUAL;     break;
 
         case '1': currentSpeedIndex = 0; break;
