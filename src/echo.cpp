@@ -1,4 +1,7 @@
 #include "echo.h"
+#include "pins.h"
+#include "motors.h"
+#include <Arduino.h>
 
 // Internal pin storage
 static int _trigPin = -1;
@@ -11,6 +14,20 @@ void echo_init(int trigPin, int echoPin) {
     pinMode(_trigPin, OUTPUT);
     digitalWrite(_trigPin, LOW);
     pinMode(_echoPin, INPUT);
+}
+
+void echo_update() {
+    int distance_cm = echo_getDistance();
+
+        if(distance_cm > 10) {
+            motors_forward(); 
+            Serial.println("Autonomous Forward");
+        }
+        else if(distance_cm <= 10) {
+            motors_coast();
+            motors_right();
+            Serial.println("Autonomous Obstacle Avoidance - Right Turn");
+        }
 }
 
 int echo_getDistance() {

@@ -38,16 +38,7 @@ void loop() {
     // Autonomous
     if (currentMode == AUTONOMOUS) {
         echo_init(TRIG_PIN, ECHO_PIN);
-        int distance_cm = echo_getDistance();
-
-        if(distance_cm > 10) {
-            motors_forward(); 
-            Serial.println("Autonomous Forward");
-        }
-        else if(distance_cm <= 10) {
-            motors_coast();
-            Serial.println("Autonomous Brake");
-        }
+        echo_update();
         return;
     }
 
