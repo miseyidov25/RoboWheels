@@ -23,7 +23,7 @@ void bt_update() {
         case 'B': motors_reverse(); break;
         case 'L': motors_left();    break;
         case 'R': motors_right();   break;
-        case 'S': motors_brake();   break;
+        case 'S': motors_coast();   break;
         case 'C': motors_coast();   break;
         case 'H': motors_correctright();  break;
         case 'G': motors_correctleft();   break;

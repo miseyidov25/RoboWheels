@@ -39,7 +39,7 @@ void line_update() {
   }else if (left == HIGH && middle == HIGH && right == HIGH) {
     digitalWrite(LINE_LED, LOW);
     Serial.println("All low");
-    motors_brake();
+    motors_coast();
   }else {
     Serial.println("Something wrong");
     motors_coast();
