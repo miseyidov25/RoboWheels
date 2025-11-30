@@ -29,13 +29,13 @@ void line_update() {
     motors_right();
   } else if (left == LOW && middle == HIGH && right == HIGH) {
     Serial.println("Right & middle");
-    motors_correctright();
+    motors_forward();
   }else if (left == HIGH && middle == LOW && right == LOW) {
     Serial.println("Left");
     motors_left();
   } else if (left == HIGH && middle == HIGH && right == LOW) {
     Serial.println("Left & middle");
-    motors_correctleft();
+    motors_forward();
   }else if (left == HIGH && middle == HIGH && right == HIGH) {
     digitalWrite(LINE_LED, LOW);
     Serial.println("All low");
