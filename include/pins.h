@@ -2,9 +2,9 @@
 #define PINS_H
 
 // Motor pins (use these everywhere)
-#define IN1 5
+#define IN1 9
 #define IN2 6
-#define IN3 9
+#define IN3 5
 #define IN4 10
 
 // Line sensor pins
