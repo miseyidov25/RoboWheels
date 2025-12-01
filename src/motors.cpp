@@ -48,11 +48,11 @@ void motors_left() {
   analogWrite(IN4, 0);
 }
 void motors_correctleft() {
+  // Slight left turn - reduce left side speed
   int s = currentEffectiveSpeed();
-  int reducedSpeed = s - 20;
-  analogWrite(IN1, reducedSpeed);
-  analogWrite(IN2, reducedSpeed);
-  analogWrite(IN3, 0);
+  analogWrite(IN1, s);
+  analogWrite(IN2, 0);
+  analogWrite(IN3, s);
   analogWrite(IN4, 0);
 }
 void motors_right() {
@@ -63,12 +63,12 @@ void motors_right() {
   analogWrite(IN4, s);
 }
 void motors_correctright() {
+  // Slight right turn - reduce right side speed
   int s = currentEffectiveSpeed();
-  int reducedSpeed = s - 20;
-  analogWrite(IN1, 0);
+  analogWrite(IN1, s);
   analogWrite(IN2, 0);
-  analogWrite(IN3, reducedSpeed);
-  analogWrite(IN4, reducedSpeed);
+  analogWrite(IN3, s);
+  analogWrite(IN4, 0);
 }
 void motors_brake() {
   analogWrite(IN1, 255);

@@ -5,7 +5,7 @@
 
 #include "bt.h"        // uses Mode enum + currentMode
 #include "motors.h"    // for currentEffectiveSpeed()
-#include "ui.h"
+#include "oled.h"
 
 // OLED 128x64 I2C
 static U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(
@@ -156,7 +156,7 @@ static void updateTime()
 }
 
 // --------- Public Functions ----------
-void ui_init()
+void oled_init()
 {
     pinMode(BTN_NEXT, INPUT_PULLUP);
     pinMode(BTN_SELECT, INPUT_PULLUP);
@@ -167,7 +167,7 @@ void ui_init()
     hasSelectedMode = false;
 }
 
-void ui_update()
+void oled_update()
 {
     updateTime();
     handleButtons();

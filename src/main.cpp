@@ -4,6 +4,8 @@
 #include "line.h"
 #include "bt.h"
 #include "echo.h"
+#include "oled.h"
+
 
 // === GLOBAL MODE VARIABLE DEFINED HERE ===
 Mode currentMode = MANUAL;
@@ -23,6 +25,8 @@ void setup() {
     Serial.begin(9600);
 
     motors_init();
+    oled_init();
+
 
     pinMode(LEFT_SENSOR, INPUT);
     pinMode(MIDDLE_SENSOR, INPUT);
@@ -33,6 +37,7 @@ void setup() {
 }
 
 void loop() {
+    oled_update();
     bt_update();
 
     // Autonomous
