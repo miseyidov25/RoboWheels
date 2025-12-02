@@ -18,6 +18,7 @@ void motors_coast();
 // Globals: defined exactly once in main.cpp or motors.cpp
 extern int motorSpeed;          // defined in main.cpp
 extern int motorSpeedAuto;      // defined in main.cpp
+extern int motorDirection;
 
 // Speed-level presets and index: defined in motors.cpp (storage)
 extern int speedLevels[];

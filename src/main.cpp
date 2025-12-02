@@ -27,7 +27,6 @@ void setup() {
     motors_init();
     oled_init();
 
-
     pinMode(LEFT_SENSOR, INPUT);
     pinMode(MIDDLE_SENSOR, INPUT);
     pinMode(RIGHT_SENSOR, INPUT);
