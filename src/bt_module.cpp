@@ -4,6 +4,11 @@
 
 // Use speedLevels/currentSpeedIndex defined in motors.cpp (declared extern in motors.h)
 
+// Track last command and timeout for auto-stop
+static char lastCmd = '\0';
+static unsigned long lastCmdTime = 0;
+const unsigned long CMD_TIMEOUT = 100;  // 100ms timeout for auto-stop
+
 void bt_init() {
     // Serial.begin is in main.cpp
 }
@@ -16,12 +21,45 @@ extern bool menuActive;
 extern bool hasSelectedMode;
 
 void bt_update() {
+    unsigned long now = millis();
+
+    // Auto-stop if no command received for CMD_TIMEOUT ms
+    if (lastCmd != '\0' && (now - lastCmdTime) > CMD_TIMEOUT) {
+        lastCmd = '\0';
+        motors_coast();
+        // Don't spam serial with auto-stop messages
+    }
+
     if (!Serial.available()) return;
 
     char cmd = Serial.read();
-    Serial.print("Got: ");
-    Serial.println(cmd);
+    
+    // Ignore empty/whitespace characters
+    if (cmd == '\0' || cmd == '\r' || cmd == '\n' || cmd == ' ') {
+        return;
+    }
+    
+    // Convert lowercase to uppercase for consistency
+    if (cmd >= 'a' && cmd <= 'z') {
+        cmd = cmd - 'a' + 'A';
+    }
+    
+    // Only execute and print if command changed
+    if (cmd != lastCmd) {
+        Serial.print("Got: ");
+        Serial.println(cmd);
+        lastCmd = cmd;
+        lastCmdTime = now;
+        
+        // Execute the command
+        executeCommand(cmd);
+    } else {
+        // Same command repeated, just update timestamp to keep it alive
+        lastCmdTime = now;
+    }
+}
 
+void executeCommand(char cmd) {
     bool speedChanged = false;
 
     switch (cmd) {
@@ -36,8 +74,8 @@ void bt_update() {
 
         case 'W': 
             currentMode = AUTONOMOUS;
-            menuActive = false;      // Exit menu when mode is set via BT
-            hasSelectedMode = true;  // Mark mode as selected
+            menuActive = false;
+            hasSelectedMode = true;
             Serial.println("Mode set via BT: AUTONOMOUS");
             break;
         case 'X': 

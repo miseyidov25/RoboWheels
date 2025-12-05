@@ -15,5 +15,6 @@ extern const int speedLevelsCount;
 // Functions
 void bt_init();
 void bt_update();
+void executeCommand(char cmd);
 
 #endif
