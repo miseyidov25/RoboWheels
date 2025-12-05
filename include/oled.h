@@ -1,6 +1,8 @@
 #ifndef OLED_H
 #define OLED_H
 
+// UI state: true = menu visible, false = status screen visible
+extern bool menuActive;
 
 void drawMenuScreen();
 void drawStatusScreen();
@@ -12,7 +14,5 @@ void saveTotalSecondsToEEPROM();
 
 void oled_init();
 void oled_update();
-
-
 
 #endif

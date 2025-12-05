@@ -30,7 +30,7 @@ static Mode menuSelection = AUTONOMOUS;
 
 // true  = menu screen is visible
 // false = status screen is visible
-static bool menuActive      = false;
+bool menuActive      = false;
 
 // true after a mode has been selected at least once
 static bool hasSelectedMode = false;
@@ -129,29 +129,27 @@ void drawStatusScreen()
 {
   u8g2.setFont(u8g2_font_6x13_tr);
   
+  u8g2.firstPage();
   do {
+    char buf[40];
+    
     // Line 1: active mode
-    u8g2.setCursor(0, 12);
-    u8g2.print("Mode: ");
-    u8g2.print(modeToString(currentMode));
+    snprintf(buf, sizeof(buf), "Mode: %s", modeToString(currentMode));
+    u8g2.drawStr(0, 12, buf);
 
     // Line 2: direction
-    u8g2.setCursor(0, 28);
-    u8g2.print("Dir : ");
-    u8g2.print(getCurrentDirection());
+    snprintf(buf, sizeof(buf), "Dir : %s", getCurrentDirection());
+    u8g2.drawStr(0, 28, buf);
 
     // Line 3: speed
-    u8g2.setCursor(0, 44);
-    u8g2.print("Spd : ");
-    u8g2.print(getCurrentSpeed());
-    u8g2.print(" (PWM)");
+    snprintf(buf, sizeof(buf), "Spd : %d", getCurrentSpeed());
+    u8g2.drawStr(0, 44, buf);
 
     // Line 4: total runtime
-    char buf[16];
-    formatTime(totalSeconds, buf, sizeof(buf));
-    u8g2.setCursor(0, 60);
-    u8g2.print("Time: ");
-    u8g2.print(buf);
+    char timebuf[16];
+    formatTime(totalSeconds, timebuf, sizeof(timebuf));
+    snprintf(buf, sizeof(buf), "Time: %s", timebuf);
+    u8g2.drawStr(0, 62, buf);
   } while (u8g2.nextPage());
 }
 
@@ -159,14 +157,10 @@ void drawMenuScreen()
 {
   u8g2.setFont(u8g2_font_6x13_tr);
 
+  u8g2.firstPage();
   do {
     // Title line
-    u8g2.setCursor(0, 12);
-    if (!hasSelectedMode) {
-      u8g2.print("Select mode to start:");
-    } else {
-      u8g2.print("Select mode:");
-    }
+    u8g2.drawStr(0, 12, "Select mode:");
 
     // List of modes with arrow on selected line
     int startY = 28;
@@ -174,16 +168,15 @@ void drawMenuScreen()
 
     for (int i = 0; i < COUNT; ++i) {
       int y = startY + i * lineHeight;
-
+      
+      char buf[20];
       if ((int)menuSelection == i) {
-        // Draw cursor arrow
-        u8g2.setCursor(0, y);
-        u8g2.print(">");
+        // Draw cursor arrow with mode name
+        snprintf(buf, sizeof(buf), "> %s", modeToString((Mode)i));
+      } else {
+        snprintf(buf, sizeof(buf), "  %s", modeToString((Mode)i));
       }
-
-      // Draw mode name
-      u8g2.setCursor(12, y);
-      u8g2.print(modeToString((Mode)i));
+      u8g2.drawStr(0, y, buf);
     }
   } while (u8g2.nextPage());
 }
@@ -192,12 +185,10 @@ void drawSplashScreen()
 {
   u8g2.setFont(u8g2_font_6x13_tr);
 
+  u8g2.firstPage();
   do {
-    u8g2.setCursor(0, 24);
-    u8g2.print("RoboWheel");
-
-    u8g2.setCursor(0, 40);
-    u8g2.print("Mode Selection First");
+    u8g2.drawStr(0, 24, "RoboWheel");
+    u8g2.drawStr(0, 40, "Mode Selection First");
   } while (u8g2.nextPage());
 }
 
@@ -211,6 +202,7 @@ static void handleNextPressed()
     int idx = (int)menuSelection;
     idx = (idx + 1) % COUNT;   // 0→1→2→0
     menuSelection = (Mode)idx;
+    u8g2.clearDisplay();  // Force immediate display update
   }
 }
 
@@ -222,10 +214,15 @@ static void handleSelectPressed()
     currentMode     = menuSelection;
     hasSelectedMode = true;
     menuActive      = false;
+    u8g2.clearDisplay();  // Clear display to force refresh
+    Serial.print("Mode selected: ");
+    Serial.println(modeToString(currentMode));
   } else {
     // We are in the status screen: reopen the menu
     menuActive    = true;
     menuSelection = currentMode;  // start cursor at current mode
+    u8g2.clearDisplay();  // Clear display to force refresh
+    Serial.println("Menu reopened");
   }
 }
 
@@ -307,8 +304,6 @@ void oled_init()
   hasSelectedMode = false;
   currentMode     = AUTONOMOUS;
   menuSelection   = currentMode;
-  
-  Serial.println("OLED: Splash complete, menu ready");
 }
 
 void oled_update()
@@ -319,6 +314,16 @@ void oled_update()
   if (menuActive) {
     drawMenuScreen();
   } else {
+    // Print runtime to serial for debugging
+    static unsigned long lastPrint = 0;
+    if (millis() - lastPrint >= 1000) {  // Print every 1 second
+      char buf[16];
+      formatTime(totalSeconds, buf, sizeof(buf));
+      Serial.print("Runtime: ");
+      Serial.println(buf);
+      lastPrint = millis();
+    }
+    
     drawStatusScreen();
   }
 

@@ -29,32 +29,32 @@ void setup() {
     Wire.begin();
 
     motors_init();
-    oled_init();
+    echo_init(TRIG_PIN, ECHO_PIN);  // Initialize ONCE in setup
 
     pinMode(LEFT_SENSOR, INPUT);
     pinMode(MIDDLE_SENSOR, INPUT);
     pinMode(RIGHT_SENSOR, INPUT);
     pinMode(LINE_LED, OUTPUT);
 
+    oled_init();  // After echo_init so pins are ready
     bt_init();
 }
 
 void loop() {
-    oled_update();
-    bt_update();
+    oled_update();  // Update display and handle button inputs
+    bt_update();    // Handle Bluetooth commands
 
-    // Autonomous
-    if (currentMode == AUTONOMOUS) {
-        echo_init(TRIG_PIN, ECHO_PIN);
-        echo_update();
-        return;
+    // Only run mode-specific code if a mode has been selected
+    // (i.e., we're NOT in the menu)
+    if (!menuActive) {
+        // Autonomous mode
+        if (currentMode == AUTONOMOUS) {
+            echo_update();
+        }
+        // Slave mode (line follow)
+        else if (currentMode == SLAVE) {
+            line_update();
+        }
+        // Manual mode → nothing here (Bluetooth handles it)
     }
-
-    // Slave (line follow)
-    if (currentMode == SLAVE) {
-        line_update();
-        return;
-    }
-
-    // Manual mode → nothing here (Bluetooth handles it)
 }
