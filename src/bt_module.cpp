@@ -11,6 +11,10 @@ void bt_init() {
 // Use THE SAME global variable defined in main.cpp:
 extern Mode currentMode;
 
+// External reference to OLED state
+extern bool menuActive;
+extern bool hasSelectedMode;
+
 void bt_update() {
     if (!Serial.available()) return;
 
@@ -30,10 +34,24 @@ void bt_update() {
         case 'H': motors_correctright();  break;
         case 'G': motors_correctleft();   break;
 
-        case 'W': currentMode = AUTONOMOUS; break;
-        case 'X': currentMode = SLAVE;      break;
-        case 'w': currentMode = MANUAL;     break;
-        case 'x': currentMode = MANUAL;     break;
+        case 'W': 
+            currentMode = AUTONOMOUS;
+            menuActive = false;      // Exit menu when mode is set via BT
+            hasSelectedMode = true;  // Mark mode as selected
+            Serial.println("Mode set via BT: AUTONOMOUS");
+            break;
+        case 'X': 
+            currentMode = SLAVE;
+            menuActive = false;
+            hasSelectedMode = true;
+            Serial.println("Mode set via BT: SLAVE");
+            break;
+        case 'U': 
+            currentMode = MANUAL;
+            menuActive = false;
+            hasSelectedMode = true;
+            Serial.println("Mode set via BT: MANUAL");
+            break;
 
         case '1': currentSpeedIndex = 0; speedChanged = true; break;
         case '2': currentSpeedIndex = 1; speedChanged = true; break;

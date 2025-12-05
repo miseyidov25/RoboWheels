@@ -33,7 +33,7 @@ static Mode menuSelection = AUTONOMOUS;
 bool menuActive      = false;
 
 // true after a mode has been selected at least once
-static bool hasSelectedMode = false;
+bool hasSelectedMode = false;
 
 // Last sampled button states (for edge detection)
 static bool lastNextState   = HIGH;  // for BTN_NEXT_PIN
@@ -234,16 +234,16 @@ void readButtons()
   // Buttons use INPUT_PULLUP: idle = HIGH, pressed = LOW
   // We detect the falling edge: HIGH -> LOW
 
-  // PIN 2: NEXT (ONLY scrolls in menu, never selects)
+  // PIN A2: NEXT (ONLY scrolls in menu, never selects)
   if (menuActive) {
     if (lastNextState == HIGH && currentNext == LOW) {
       Serial.println("NEXT button pressed");
       handleNextPressed();
     }
   }
-  // When menuActive == false, pin 2 does NOTHING at all
+  // When menuActive == false, pin A2 does NOTHING at all
 
-  // PIN 3: SELECT (always allowed to open/close/select)
+  // PIN A3: SELECT (always allowed to open/close/select)
   if (lastSelectState == HIGH && currentSelect == LOW) {
     Serial.println("SELECT button pressed");
     handleSelectPressed();
