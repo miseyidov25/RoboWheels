@@ -1,4 +1,3 @@
-
 #include <Arduino.h>
 #include <Wire.h>
 #include <U8g2lib.h>
@@ -9,279 +8,324 @@
 #include "pins.h"
 #include "line.h"
 
-// ===================== PIN CONFIG =====================
 
+// ===================== PIN CONFIGURATION =====================
+
+// Button to move up/down through the menu (ONLY navigation)
 static const uint8_t BTN_NEXT_PIN   = A2;
+
+// Button to select a mode and open/close the menu
 static const uint8_t BTN_SELECT_PIN = A3;
 
-// Use page-buffer mode (_1_HW_I2C) to save ~1KB RAM
+// OLED: standard I2C SSD1306 128x64 on A4(SDA), A5(SCL)
 static U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(
-    U8G2_R0,
-    U8X8_PIN_NONE
+  U8G2_R0,        // rotation
+  U8X8_PIN_NONE   // no reset pin
 );
 
 // ===================== UI STATE =====================
 
-// USE THE GLOBAL currentMode from main.cpp (DO NOT REDEFINE IT)
-extern Mode currentMode;
-
+// Highlighted mode in the menu (the arrow position)
 static Mode menuSelection = AUTONOMOUS;
-#define MODE_COUNT 3
 
+// true  = menu screen is visible
+// false = status screen is visible
 static bool menuActive      = false;
+
+// true after a mode has been selected at least once
 static bool hasSelectedMode = false;
 
-static bool lastNextState   = HIGH;
-static bool lastSelectState = HIGH;
+// Last sampled button states (for edge detection)
+static bool lastNextState   = HIGH;  // for BTN_NEXT_PIN
+static bool lastSelectState = HIGH;  // for BTN_SELECT_PIN
 
 // ===================== RUNTIME / EEPROM =====================
 
+// Total runtime (seconds) while a mode is active
 static uint32_t totalSeconds = 0;
+
+// For timing with millis()
 static unsigned long lastSecondTick = 0;
 
+// EEPROM address where totalSeconds (4 bytes) is stored
 static const int EEPROM_ADDR_TOTAL_SECONDS = 0;
 
+// Flags and timing to avoid writing to EEPROM too often
 static bool eepromDirty = false;
 static unsigned long lastEepromWrite = 0;
-static const unsigned long EEPROM_WRITE_INTERVAL_MS = 10000UL;
+static const unsigned long EEPROM_WRITE_INTERVAL_MS = 5000UL; // 5 seconds (was 10)
 
 // ===================== FORWARD DECLARATIONS =====================
 
-static void drawMenuScreen();
-static void drawStatusScreen();
-static void drawSplashScreen();
-static void readButtons();
-static void updateRuntime();
-static void loadTotalSecondsFromEEPROM();
-static void saveTotalSecondsToEEPROM();
 static const char* modeToString(Mode m);
 
-// ===================== STATUS FUNCTIONS =====================
+void oled_init();
+void oled_update();
+Mode ui_get_current_mode();
 
-static const char* getCurrentDirection() {
-    switch (motorDirection) {
-        case 1:  return "Forward";
-        case -1: return "Reverse";
-        case 2:  return "Left";
-        case 3:  return "Right";
-        default: return "Stopped";
-    }
+// ===================== PLACEHOLDERS: DIRECTION & SPEED =====================
+// TODO: Replace these with real data from your motor logic.
+
+static const char* getCurrentDirection()
+{
+  // Example values later: "Forward", "Backward", "Left", "Right", "Stopped"
+  return "Forward";
 }
 
-static int getCurrentSpeed() {
-    return currentEffectiveSpeed();
+static int getCurrentSpeed()
+{
+  // Replace with our speed
+  return 128;
 }
 
-// ===================== HELPERS =====================
+// ===================== HELPER FUNCTIONS =====================
 
 static const char* modeToString(Mode m)
 {
-    switch (m) {
-        case AUTONOMOUS: return "Autonomous";
-        case SLAVE:      return "Slave";
-        case MANUAL:     return "Manual";
-        default:         return "Unknown";
-    }
+  switch (m) {
+    case AUTONOMOUS: return "Auto";
+    case SLAVE:      return "Slave";
+    case MANUAL:     return "Manual";
+    default:              return "?";
+  }
 }
 
-static void formatTime(uint32_t seconds, char* buffer, size_t len)
+void formatTime(uint32_t seconds, char* buffer, size_t len)
 {
-    uint32_t h = seconds / 3600;
-    uint32_t m = (seconds % 3600) / 60;
-    uint32_t s = seconds % 60;
+  uint32_t h = seconds / 3600;
+  uint32_t m = (seconds % 3600) / 60;
+  uint32_t s = seconds % 60;
 
-    snprintf(buffer, len, "%02lu:%02lu:%02lu",
-             (unsigned long)h,
-             (unsigned long)m,
-             (unsigned long)s);
+  snprintf(buffer, len, "%02lu:%02lu:%02lu",
+           (unsigned long)h,
+           (unsigned long)m,
+           (unsigned long)s);
 }
 
-// ===================== EEPROM =====================
+// ===================== EEPROM HANDLING =====================
 
-static void loadTotalSecondsFromEEPROM()
+void loadTotalSecondsFromEEPROM()
 {
-    uint32_t value = 0;
-    for (int i = 0; i < 4; ++i) {
-        value |= ((uint32_t)EEPROM.read(EEPROM_ADDR_TOTAL_SECONDS + i)) << (8 * i);
-    }
-    totalSeconds = value;
+  uint32_t value = 0;
+  for (int i = 0; i < 4; ++i) {
+    uint8_t b = EEPROM.read(EEPROM_ADDR_TOTAL_SECONDS + i);
+    value |= ((uint32_t)b << (8 * i));
+  }
+  totalSeconds = value;
 }
 
-static void saveTotalSecondsToEEPROM()
+void saveTotalSecondsToEEPROM()
 {
-    uint32_t value = totalSeconds;
-    for (int i = 0; i < 4; ++i) {
-        EEPROM.update(EEPROM_ADDR_TOTAL_SECONDS + i, (value >> (8 * i)) & 0xFF);
-    }
+  uint32_t value = totalSeconds;
+  for (int i = 0; i < 4; ++i) {
+    uint8_t b = (value >> (8 * i)) & 0xFF;
+    EEPROM.update(EEPROM_ADDR_TOTAL_SECONDS + i, b);
+  }
 }
 
-// ===================== DRAW SCREENS =====================
+// ===================== DRAWING FUNCTIONS =====================
 
-static void drawStatusScreen()
+void drawStatusScreen()
 {
-    u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x13_tr);
-
+  u8g2.setFont(u8g2_font_6x13_tr);
+  
+  do {
+    // Line 1: active mode
     u8g2.setCursor(0, 12);
     u8g2.print("Mode: ");
     u8g2.print(modeToString(currentMode));
 
+    // Line 2: direction
     u8g2.setCursor(0, 28);
     u8g2.print("Dir : ");
     u8g2.print(getCurrentDirection());
 
+    // Line 3: speed
     u8g2.setCursor(0, 44);
     u8g2.print("Spd : ");
     u8g2.print(getCurrentSpeed());
     u8g2.print(" (PWM)");
 
+    // Line 4: total runtime
     char buf[16];
     formatTime(totalSeconds, buf, sizeof(buf));
     u8g2.setCursor(0, 60);
     u8g2.print("Time: ");
     u8g2.print(buf);
-
-    u8g2.sendBuffer();
+  } while (u8g2.nextPage());
 }
 
-static void drawMenuScreen()
+void drawMenuScreen()
 {
-    u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x13_tr);
+  u8g2.setFont(u8g2_font_6x13_tr);
 
+  do {
+    // Title line
     u8g2.setCursor(0, 12);
-    if (!hasSelectedMode) u8g2.print("Select mode to start:");
-    else                  u8g2.print("Select mode:");
+    if (!hasSelectedMode) {
+      u8g2.print("Select mode to start:");
+    } else {
+      u8g2.print("Select mode:");
+    }
 
+    // List of modes with arrow on selected line
     int startY = 28;
     const int lineHeight = 14;
 
-    for (int i = 0; i < MODE_COUNT; ++i) {
-        int y = startY + i * lineHeight;
+    for (int i = 0; i < COUNT; ++i) {
+      int y = startY + i * lineHeight;
 
-        if ((int)menuSelection == i) {
-            u8g2.setCursor(0, y);
-            u8g2.print(">");
-        }
+      if ((int)menuSelection == i) {
+        // Draw cursor arrow
+        u8g2.setCursor(0, y);
+        u8g2.print(">");
+      }
 
-        u8g2.setCursor(12, y);
-        u8g2.print(modeToString((Mode)i));
+      // Draw mode name
+      u8g2.setCursor(12, y);
+      u8g2.print(modeToString((Mode)i));
     }
-
-    u8g2.sendBuffer();
+  } while (u8g2.nextPage());
 }
 
-static void drawSplashScreen()
+void drawSplashScreen()
 {
-    u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_6x13_tr);
+  u8g2.setFont(u8g2_font_6x13_tr);
 
+  do {
     u8g2.setCursor(0, 24);
     u8g2.print("RoboWheel");
 
     u8g2.setCursor(0, 40);
     u8g2.print("Mode Selection First");
-
-    u8g2.sendBuffer();
+  } while (u8g2.nextPage());
 }
 
 // ===================== BUTTON HANDLING =====================
 
+// NEXT button (pin 2): ONLY scrolls through menu items
 static void handleNextPressed()
 {
-    if (menuActive) {
-        int idx = (int)menuSelection;
-        idx = (idx + 1) % MODE_COUNT;
-        menuSelection = (Mode)idx;
-    }
+  // Only do something when the menu is visible
+  if (menuActive) {
+    int idx = (int)menuSelection;
+    idx = (idx + 1) % COUNT;   // 0→1→2→0
+    menuSelection = (Mode)idx;
+  }
 }
 
+// SELECT button (pin 3): selects mode or opens/closes menu
 static void handleSelectPressed()
 {
-    if (menuActive) {
-        currentMode     = menuSelection;
-        hasSelectedMode = true;
-        menuActive      = false;
-    } else {
-        menuActive     = true;
-        menuSelection  = currentMode;
-    }
+  if (menuActive) {
+    // We are in the menu: confirm selection and go to status screen
+    currentMode     = menuSelection;
+    hasSelectedMode = true;
+    menuActive      = false;
+  } else {
+    // We are in the status screen: reopen the menu
+    menuActive    = true;
+    menuSelection = currentMode;  // start cursor at current mode
+  }
 }
 
-static void readButtons()
+void readButtons()
 {
-    bool currentNext   = digitalRead(BTN_NEXT_PIN);
-    bool currentSelect = digitalRead(BTN_SELECT_PIN);
+  bool currentNext   = digitalRead(BTN_NEXT_PIN);
+  bool currentSelect = digitalRead(BTN_SELECT_PIN);
 
-    if (menuActive && lastNextState == HIGH && currentNext == LOW)
-        handleNextPressed();
+  // Buttons use INPUT_PULLUP: idle = HIGH, pressed = LOW
+  // We detect the falling edge: HIGH -> LOW
 
-    if (lastSelectState == HIGH && currentSelect == LOW)
-        handleSelectPressed();
+  // PIN 2: NEXT (ONLY scrolls in menu, never selects)
+  if (menuActive) {
+    if (lastNextState == HIGH && currentNext == LOW) {
+      Serial.println("NEXT button pressed");
+      handleNextPressed();
+    }
+  }
+  // When menuActive == false, pin 2 does NOTHING at all
 
-    lastNextState   = currentNext;
-    lastSelectState = currentSelect;
+  // PIN 3: SELECT (always allowed to open/close/select)
+  if (lastSelectState == HIGH && currentSelect == LOW) {
+    Serial.println("SELECT button pressed");
+    handleSelectPressed();
+  }
+
+  lastNextState   = currentNext;
+  lastSelectState = currentSelect;
 }
 
-// ===================== RUNTIME =====================
+// ===================== RUNTIME & EEPROM UPDATE =====================
 
-static void updateRuntime()
+void updateRuntime()
 {
-    if (!hasSelectedMode) return;
+  // Only count runtime after a mode has been selected at least once
+  if (!hasSelectedMode) return;
 
-    unsigned long now = millis();
+  unsigned long now = millis();
 
-    if (now - lastSecondTick >= 1000UL) {
-        lastSecondTick += 1000UL;
-        totalSeconds++;
-        eepromDirty = true;
-    }
+  // Increment seconds
+  if (now - lastSecondTick >= 1000UL) {
+    lastSecondTick += 1000UL;
+    totalSeconds++;
+    eepromDirty = true;
+  }
 
-    if (eepromDirty && (now - lastEepromWrite >= EEPROM_WRITE_INTERVAL_MS)) {
-        saveTotalSecondsToEEPROM();
-        lastEepromWrite = now;
-        eepromDirty = false;
-    }
+  // Save to EEPROM every EEPROM_WRITE_INTERVAL_MS when changed
+  if (eepromDirty && (now - lastEepromWrite >= EEPROM_WRITE_INTERVAL_MS)) {
+    saveTotalSecondsToEEPROM();
+    lastEepromWrite = now;
+    eepromDirty     = false;
+  }
 }
 
-// ===================== PUBLIC API =====================
+// ===================== UI PUBLIC API =====================
 
 void oled_init()
 {
-    pinMode(BTN_NEXT_PIN,   INPUT_PULLUP);
-    pinMode(BTN_SELECT_PIN, INPUT_PULLUP);
+  // Configure buttons with internal pull-ups
+  pinMode(BTN_NEXT_PIN,   INPUT_PULLUP);
+  pinMode(BTN_SELECT_PIN, INPUT_PULLUP);
 
-    u8g2.begin();
+  // Initialize OLED
+  u8g2.begin();
 
-    loadTotalSecondsFromEEPROM();
+  // Load total runtime from EEPROM
+  loadTotalSecondsFromEEPROM();
 
-    lastNextState   = digitalRead(BTN_NEXT_PIN);
-    lastSelectState = digitalRead(BTN_SELECT_PIN);
+  // Seed last button states
+  lastNextState   = digitalRead(BTN_NEXT_PIN);
+  lastSelectState = digitalRead(BTN_SELECT_PIN);
 
-// Immediately show menu on boot
-menuActive      = true;
-hasSelectedMode = false;
-menuSelection   = MANUAL;
+  // Show splash screen
+  drawSplashScreen();
+  delay(1500);
 
-drawSplashScreen();
-delay(1500);
-drawMenuScreen();   // Start directly in menu
-
+  // Start in menu; user must choose a mode before runtime counts
+  menuActive      = true;
+  hasSelectedMode = false;
+  currentMode     = AUTONOMOUS;
+  menuSelection   = currentMode;
+  
+  Serial.println("OLED: Splash complete, menu ready");
 }
 
 void oled_update()
 {
-    updateRuntime();
-    readButtons();
+  updateRuntime();
+  readButtons();
 
-    if (menuActive) drawMenuScreen();
-    else            drawStatusScreen();
+  if (menuActive) {
+    drawMenuScreen();
+  } else {
+    drawStatusScreen();
+  }
 
-    delay(20);
+  delay(20); // small delay for debouncing and lower CPU usage
 }
 
-Mode oled_get_current_mode()
+Mode ui_get_current_mode()
 {
-    return currentMode;
+  return currentMode;
 }
-

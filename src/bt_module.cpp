@@ -18,6 +18,8 @@ void bt_update() {
     Serial.print("Got: ");
     Serial.println(cmd);
 
+    bool speedChanged = false;
+
     switch (cmd) {
         case 'F': motors_forward(); break;
         case 'B': motors_reverse(); break;
@@ -33,10 +35,10 @@ void bt_update() {
         case 'w': currentMode = MANUAL;     break;
         case 'x': currentMode = MANUAL;     break;
 
-        case '1': currentSpeedIndex = 0; break;
-        case '2': currentSpeedIndex = 1; break;
-        case '3': currentSpeedIndex = 2; break;
-        case '4': currentSpeedIndex = 3; break;
+        case '1': currentSpeedIndex = 0; speedChanged = true; break;
+        case '2': currentSpeedIndex = 1; speedChanged = true; break;
+        case '3': currentSpeedIndex = 2; speedChanged = true; break;
+        case '4': currentSpeedIndex = 3; speedChanged = true; break;
 
         default: break;
     }
@@ -46,8 +48,9 @@ void bt_update() {
     if (currentSpeedIndex >= speedLevelsCount)
         currentSpeedIndex = speedLevelsCount - 1;
 
-    motors_set_speed(speedLevels[currentSpeedIndex]);
-
-    Serial.print("Speed set to: ");
-    Serial.println(speedLevels[currentSpeedIndex]);
+    if (speedChanged) {
+        motors_set_speed(speedLevels[currentSpeedIndex]);
+        Serial.print("Speed set to: ");
+        Serial.println(speedLevels[currentSpeedIndex]);
+    }
 }

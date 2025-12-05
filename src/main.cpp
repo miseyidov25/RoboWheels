@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include "pins.h"
 #include "motors.h"
 #include "line.h"
@@ -23,6 +24,9 @@ int currentEffectiveSpeed() {
 
 void setup() {
     Serial.begin(9600);
+
+    // Initialize I2C for OLED display
+    Wire.begin();
 
     motors_init();
     oled_init();

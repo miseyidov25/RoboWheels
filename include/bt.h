@@ -2,7 +2,7 @@
 #define BT_H
 
 // Declare Mode enum ONCE for the whole project:
-enum Mode { MANUAL, AUTONOMOUS, SLAVE };
+enum Mode { MANUAL, AUTONOMOUS, SLAVE, COUNT };
 
 // Declare the global variable (but DO NOT define it)
 extern Mode currentMode;
