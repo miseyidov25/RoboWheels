@@ -1,9 +1,10 @@
 #include "leds.h"
+#include <Arduino.h>
+#include "motors.h"
 
 // LED pins
 #define LED_L 9
 #define LED_R 10
-#define LED_B 11
 
 // Blink interval for turn signals
 #define BLINK_INTERVAL 300
@@ -22,17 +23,18 @@ void leds_update(unsigned long now, bool fwd, bool rev, bool left, bool right) {
     digitalWrite(LED_B, LOW);
 
     // Left turn signal
-    if (left) {
+    if (motorDirection == 2 || left) {
         if ((now / BLINK_INTERVAL) % 2 == 0) digitalWrite(LED_L, HIGH);
     }
 
     // Right turn signal
-    if (right) {
+    if (motorDirection == 3 || right) {
         if ((now / BLINK_INTERVAL) % 2 == 0) digitalWrite(LED_R, HIGH);
     }
 
     // Brake LED
-    if (rev) {
-        digitalWrite(LED_B, HIGH);
+    if (motorDirection == 0 || rev) {
+        digitalWrite(LED_R, HIGH);
+        digitalWrite(LED_L, HIGH);
     }
 }

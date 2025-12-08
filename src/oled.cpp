@@ -63,19 +63,17 @@ void oled_init();
 void oled_update();
 Mode ui_get_current_mode();
 
-// ===================== PLACEHOLDERS: DIRECTION & SPEED =====================
-// TODO: Replace these with real data from your motor logic.
-
 static const char* getCurrentDirection()
 {
-  // Example values later: "Forward", "Backward", "Left", "Right", "Stopped"
-  return "Forward";
+  return motorDirection == 1 ? "Fwd" :
+         motorDirection == -1 ? "Rev" :
+         motorDirection == 2 ? "Left" :
+         motorDirection == 3 ? "Right" : "Stop";
 }
 
 static int getCurrentSpeed()
 {
-  // Replace with our speed
-  return 128;
+  return currentEffectiveSpeed();
 }
 
 // ===================== HELPER FUNCTIONS =====================
