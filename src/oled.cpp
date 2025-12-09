@@ -8,7 +8,7 @@
 #include "pins.h"
 #include "line.h"
 
-// ===================== PIN CONFIGURATION =====================
+// PIN CONFIG
 
 static const uint8_t BTN_NEXT_PIN   = A2;
 static const uint8_t BTN_SELECT_PIN = A3;
@@ -16,7 +16,7 @@ static const uint8_t BTN_SELECT_PIN = A3;
 // OLED: SSD1306 128x64 on A4/SDA, A5/SCL
 static U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
-// ===================== UI STATE =====================
+// UI STATE 
 
 static Mode menuSelection = MANUAL;
 bool menuActive = false;
@@ -26,7 +26,7 @@ bool hasSelectedMode = false;
 static bool lastNextState   = HIGH;
 static bool lastSelectState = HIGH;
 
-// ===================== RUNTIME / EEPROM =====================
+// RUNTIME/EEPROM 
 
 static uint32_t totalSeconds = 0;
 static unsigned long lastSecondTick = 0;
@@ -35,7 +35,7 @@ static bool eepromDirty = false;
 static unsigned long lastEepromWrite = 0;
 static const unsigned long EEPROM_WRITE_INTERVAL_MS = 5000UL;
 
-// ===================== FORWARD DECLARATIONS =====================
+// FORWARD DECLARATIONS 
 
 static const char* modeToString(Mode m);
 
@@ -43,7 +43,7 @@ void oled_init();
 void oled_update();
 Mode ui_get_current_mode();
 
-// ===================== HELPER FUNCTIONS =====================
+// HELPER FUNCTIONS 
 
 static const char* getCurrentDirection() {
     return motorDirection == 1 ? "Fwd" :
@@ -72,7 +72,7 @@ void formatTime(uint32_t seconds, char* buffer, size_t len) {
     snprintf(buffer, len, "%02lu:%02lu:%02lu", (unsigned long)h, (unsigned long)m, (unsigned long)s);
 }
 
-// ===================== EEPROM HANDLING =====================
+// EEPROM HANDLING 
 
 void loadTotalSecondsFromEEPROM() {
     uint32_t value = 0;
@@ -91,7 +91,7 @@ void saveTotalSecondsToEEPROM() {
     }
 }
 
-// ===================== DRAWING FUNCTIONS =====================
+// DRAWING FUNCTIONS 
 
 void drawStatusScreen() {
     u8g2.setFont(u8g2_font_6x13_tr);
@@ -153,7 +153,7 @@ void drawSplashScreen() {
     } while (u8g2.nextPage());
 }
 
-// ===================== BUTTON HANDLING =====================
+// BUTTON HANDLING 
 
 static void handleNextPressed() {
     if (!menuActive) return;
@@ -201,7 +201,7 @@ void readButtons() {
     lastSelectState = currentSelect;
 }
 
-// ===================== RUNTIME & EEPROM UPDATE =====================
+// RUNTIME & EEPROM UPDATE 
 
 void updateRuntime() {
     if (!hasSelectedMode) return;
@@ -223,7 +223,7 @@ void updateRuntime() {
     }
 }
 
-// ===================== UI PUBLIC API =====================
+// UI PUBLIC API
 
 void oled_init() {
     pinMode(BTN_NEXT_PIN, INPUT_PULLUP);
