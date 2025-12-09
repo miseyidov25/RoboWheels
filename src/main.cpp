@@ -28,6 +28,7 @@ void loop() {
     
     echo_update();        // Read ultrasonic sensor and handle obstacles
 
+    
     // --- LED control ---
-    leds_update(now, is_test_forward_active(), false, false, false);
+    // leds_update(now, is_test_forward_active(), false, false, false);
 }

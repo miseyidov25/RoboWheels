@@ -40,9 +40,33 @@ void echo_handleObstacles(int frontMid, int back, int frontLeft, int frontRight)
         (frontRight    > 0  && frontRight     <= FRONT_STOP))
     {
         motors_coast();
-        motors_reverse();
+
+        // TODO: simple avoidance maneuver
+        motors_left();
         delay(150);
         motors_coast();
+        return;
+    }
+
+    // Back danger — stop
+    if (back > 0 && back <= BACK_STOP) {
+        motors_coast();
+        return;
+    }
+}
+
+void echo_lineMode(int frontMid, int back, int frontLeft, int frontRight) {
+
+    const int FRONT_STOP = 10;  // cm
+    const int BACK_STOP  = 10;
+    
+    // Front danger — stop & reverse
+    if ((frontMid > 0  && frontMid  <= FRONT_STOP) ||
+        (frontLeft     > 0  && frontLeft      <= FRONT_STOP) ||
+        (frontRight    > 0  && frontRight     <= FRONT_STOP))
+    {
+        motors_coast();
+        delay(30);
         return;
     }
 
