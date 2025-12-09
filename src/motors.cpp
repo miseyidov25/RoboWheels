@@ -1,12 +1,7 @@
 #include "motors.h"
-// #include "pins.h"
+#include "pins.h"
 #include <Arduino.h>
 
-// Motor pins (all PWM capable)
-const int IN4 = 10;
-const int IN1 = 9;
-const int IN2 = 6;
-const int IN3 = 5;
 
 // Motor speed (0–255)
 int motorSpeed = 185;

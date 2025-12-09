@@ -3,13 +3,8 @@
 #include "echo.h"
 #include "leds.h"
 #include "bt.h"
+#include "pins.h"
 
-// Define pins for ultrasonic sensor
-const int TRIG_PIN = 8;
-const int ECHO_PIN = 7;
-const int ECHO_PIN2 = 2;
-const int ECHO_PIN3 = 3;
-const int ECHO_PIN4 = 4;
 const int STOP_DISTANCE_CM = 10;  // Stop if object closer than 10 cm
 
 void setup() {
@@ -22,7 +17,7 @@ void loop() {
     
     bt_update(); // Update Bluetooth commands
     
-    unsigned long now = millis();  // Get current time
+    // unsigned long now = millis();  // Get current time
     
     echo_update();        // Read ultrasonic sensor and handle obstacles
 

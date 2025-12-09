@@ -58,7 +58,7 @@ void echo_handleObstacles(int frontMid, int back, int frontLeft, int frontRight)
 void echo_lineMode(int frontMid, int back, int frontLeft, int frontRight) {
 
     const int FRONT_STOP = 10;  // cm
-    const int BACK_STOP  = 10;
+    const int BACK_STOP  = 5;
     
     // Front danger — stop & reverse
     if ((frontMid > 0  && frontMid  <= FRONT_STOP) ||

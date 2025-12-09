@@ -1,4 +1,5 @@
 #include "leds.h"
+#include "pins.h"
 
 // LED pins
 #define LED_L 9
