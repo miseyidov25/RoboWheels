@@ -3,12 +3,13 @@
 
 #include <Arduino.h>
 
-// Initialize the sensor pins
-void echo_init(int trigPin, int echoPin);
+// Initialize the 4 sensor pins
+void echo_init(int trigPin, int echoPin1, int echoPin2, int echoPin3, int echoPin4);
 
-// Read distance in cm
-int echo_getDistance();
+// Read distances (in cm) from all 4 sensors
+int echo_getDistance(int sensorIndex);  // sensorIndex 0-3
 
-void echo_update(); 
+// Update autonomous behavior based on distances
+void echo_update();
 
 #endif
