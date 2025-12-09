@@ -8,10 +8,10 @@
 #include "oled.h"
 
 
-// === GLOBAL MODE VARIABLE DEFINED HERE ===
-Mode currentMode = MANUAL;
+// GLOBAL MODE VARIABLE DEFINED HERE 
+Mode currentMode = NONE;
 
-// === Speed Control ===
+// Speed Control
 int motorSpeed = 230;
 int motorSpeedAuto = 110;
 
@@ -29,23 +29,21 @@ void setup() {
     Wire.begin();
 
     motors_init();
-    echo_init(TRIG_PIN, ECHO_PIN);  // Initialize ONCE in setup
+    echo_init(TRIG_PIN, ECHO_PIN);  
 
     pinMode(LEFT_SENSOR, INPUT);
     pinMode(MIDDLE_SENSOR, INPUT);
     pinMode(RIGHT_SENSOR, INPUT);
     pinMode(LINE_LED, OUTPUT);
 
-    oled_init();  // After echo_init so pins are ready
+    oled_init(); 
     bt_init();
 }
 
 void loop() {
-    oled_update();  // Update display and handle button inputs
-    bt_update();    // Handle Bluetooth commands
+    oled_update();  
+    bt_update();    
 
-    // Only run mode-specific code if a mode has been selected
-    // (i.e., we're NOT in the menu)
     if (!menuActive) {
         // Autonomous mode
         if (currentMode == AUTONOMOUS) {
@@ -55,6 +53,6 @@ void loop() {
         else if (currentMode == SLAVE) {
             line_update();
         }
-        // Manual mode → nothing here (Bluetooth handles it)
+        // Manual mode -> nothing here (Bluetooth handles it)
     }
 }

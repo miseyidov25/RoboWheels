@@ -12,7 +12,6 @@
 void leds_init() {
     pinMode(LED_L, OUTPUT);
     pinMode(LED_R, OUTPUT);
-    pinMode(LED_B, OUTPUT);
 }
 
 // Update LED states based on input
@@ -20,7 +19,6 @@ void leds_update(unsigned long now, bool fwd, bool rev, bool left, bool right) {
     // Turn all LEDs off by default
     digitalWrite(LED_L, LOW);
     digitalWrite(LED_R, LOW);
-    digitalWrite(LED_B, LOW);
 
     // Left turn signal
     if (motorDirection == 2 || left) {
