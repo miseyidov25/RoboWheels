@@ -11,14 +11,14 @@
 #define LEFT_SENSOR 4
 #define MIDDLE_SENSOR 3
 #define RIGHT_SENSOR 2
-#define LINE_LED 13
 
 // Echo sensor pins
 #define TRIG_PIN 8
-#define ECHO_PIN 7
-#define ECHO_PIN2 2
-#define ECHO_PIN3 3
-#define ECHO_PIN4 4
+#define ECHO_PIN1 7  //middle forward
+#define ECHO_PIN2 11 //left side
+#define ECHO_PIN3 12 //right side
+#define ECHO_PIN4 13 //back
+
 
 
 

@@ -6,6 +6,7 @@
 int speedLevels[] = {120, 150, 185, 220};
 int currentSpeedIndex = 2;  // default = f3 (185)
 int motorDirection = 0;    // 1 = forward, -1 = reverse, 0 = stopped
+const int speedLevelsCount = sizeof(speedLevels) / sizeof(speedLevels[0]);
 
 
 void motors_init() {

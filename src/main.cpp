@@ -6,12 +6,13 @@
 #include "bt.h"
 #include "echo.h"
 #include "oled.h"
-#include "pins.h"
+#include "leds.h"
 
-// === GLOBAL MODE VARIABLE DEFINED HERE ===
-Mode currentMode = MANUAL;
 
-// === Speed Control ===
+// GLOBAL MODE VARIABLE DEFINED HERE 
+Mode currentMode = NONE;
+
+// Speed Control
 int motorSpeed = 230;
 int motorSpeedAuto = 110;
 
@@ -29,23 +30,25 @@ void setup() {
     Wire.begin();
 
     motors_init();
-    echo_init(TRIG_PIN, ECHO_PIN, ECHO_PIN2, ECHO_PIN3, ECHO_PIN4); // Ultrasonic sensor
+    echo_init(TRIG_PIN, ECHO_PIN1, ECHO_PIN2, ECHO_PIN3, ECHO_PIN4);
 
     pinMode(LEFT_SENSOR, INPUT);
     pinMode(MIDDLE_SENSOR, INPUT);
     pinMode(RIGHT_SENSOR, INPUT);
-    pinMode(LINE_LED, OUTPUT); // CRINGE
 
-    oled_init();  // After echo_init so pins are ready
+    oled_init(); 
     bt_init();
+    leds_init();
 }
 
 void loop() {
-    oled_update();  // Update display and handle button inputs
-    bt_update();    // Handle Bluetooth commands
+    oled_update();  
+    bt_update();   
+    
+    char cmd = bt_get_active_cmd();
+    leds_update(millis(), cmd == 'F', cmd == 'B', cmd == 'L' || cmd == 'G', cmd == 'R' || cmd == 'H');
 
-    // Only run mode-specific code if a mode has been selected
-    // (i.e., we're NOT in the menu)
+
     if (!menuActive) {
         // Autonomous mode
         if (currentMode == AUTONOMOUS) {
@@ -55,12 +58,12 @@ void loop() {
         else if (currentMode == SLAVE) {
             line_update();
             echo_lineMode(
-                echo_readDistance(ECHO_PIN),
+                echo_readDistance(ECHO_PIN1),
                 echo_readDistance(ECHO_PIN2),
                 echo_readDistance(ECHO_PIN3),
                 echo_readDistance(ECHO_PIN4)
             );
         }
-        // Manual mode → nothing here (Bluetooth handles it)
+        // Manual mode -> nothing here (Bluetooth handles it)
     }
 }

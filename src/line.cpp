@@ -23,19 +23,15 @@ void line_update() {
     Serial.println("All high");
     motors_coast();
   } else if (left == LOW && middle == LOW && right == HIGH) {
-    digitalWrite(LINE_LED, HIGH); //change to turning LED
     Serial.println("Right");
     motors_right();
   } else if (left == LOW && middle == HIGH && right == HIGH) {
-     digitalWrite(LINE_LED, HIGH); //change to turning LED
     Serial.println("Right & middle");
     motors_forward();
   }else if (left == HIGH && middle == LOW && right == LOW) {
-     digitalWrite(LINE_LED, HIGH); //change to turning LED
     Serial.println("Left");
     motors_left();
   } else if (left == HIGH && middle == HIGH && right == LOW) {
-     digitalWrite(LINE_LED, HIGH);  //change to turning LED
     Serial.println("Left & middle");
     motors_forward();
   }else if (left == HIGH && middle == HIGH && right == HIGH) {

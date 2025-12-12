@@ -2,107 +2,110 @@
 #include "bt.h"
 #include "motors.h"
 
-// Use speedLevels/currentSpeedIndex defined in motors.cpp (declared extern in motors.h)
-
-// Track last command and timeout for auto-stop
-static char lastCmd = '\0';
-static unsigned long lastCmdTime = 0;
-const unsigned long CMD_TIMEOUT = 100;  // 100ms timeout for auto-stop
-
-void bt_init() {
-    // Serial.begin is in main.cpp
-}
-
-// Use THE SAME global variable defined in main.cpp:
+// External globals
 extern Mode currentMode;
-
-// External reference to OLED state
 extern bool menuActive;
 extern bool hasSelectedMode;
+extern int currentSpeedIndex;
+extern int speedLevels[];
+extern const int speedLevelsCount;
 
-void bt_update() {
-    unsigned long now = millis();
+// Track active command and previous state
+static char activeCmd = '\0';
+static char prevCmd = '\0';
+static unsigned long lastCmdTime = 0;  // millis() of last command
+const unsigned long STOP_DELAY = 500;  // 500 ms stop delay
 
-    // Auto-stop if no command received for CMD_TIMEOUT ms
-    if (lastCmd != '\0' && (now - lastCmdTime) > CMD_TIMEOUT) {
-        lastCmd = '\0';
-        motors_coast();
-        // Don't spam serial with auto-stop messages
-    }
-
-    if (!Serial.available()) return;
-
-    char cmd = Serial.read();
-    
-    // Ignore empty/whitespace characters
-    if (cmd == '\0' || cmd == '\r' || cmd == '\n' || cmd == ' ') {
-        return;
-    }
-    
-    // Convert lowercase to uppercase for consistency
-    if (cmd >= 'a' && cmd <= 'z') {
-        cmd = cmd - 'a' + 'A';
-    }
-    
-    // Only execute and print if command changed
-    if (cmd != lastCmd) {
-        Serial.print("Got: ");
-        Serial.println(cmd);
-        lastCmd = cmd;
-        lastCmdTime = now;
-        
-        // Execute the command
-        executeCommand(cmd);
-    } else {
-        // Same command repeated, just update timestamp to keep it alive
-        lastCmdTime = now;
-    }
+void bt_init() {
+    // Serial already initialized in main.cpp
 }
 
 void executeCommand(char cmd) {
-    bool speedChanged = false;
-
-    switch (cmd) {
-        case 'F': motors_forward(); break;
-        case 'B': motors_reverse(); break;
-        case 'L': motors_left();    break;
-        case 'R': motors_right();   break;
-        case 'S': motors_coast();   break;
-        case 'C': motors_coast();   break;
-        case 'H': motors_correctright();  break;
-        case 'G': motors_correctleft();   break;
-
-        case 'W': 
-            currentMode = AUTONOMOUS;
-            menuActive = false;
-            hasSelectedMode = true;
-            Serial.println("Mode set via BT: AUTONOMOUS");
-            break;
-        case 'X': 
-            currentMode = SLAVE;
-            menuActive = false;
-            hasSelectedMode = true;
-            Serial.println("Mode set via BT: SLAVE");
-            break;
-        case 'U': 
-            currentMode = MANUAL;
-            menuActive = false;
-            hasSelectedMode = true;
-            Serial.println("Mode set via BT: MANUAL");
-            break;
-
-        case '1': currentSpeedIndex = 0; speedChanged = true; break;
-        case '2': currentSpeedIndex = 1; speedChanged = true; break;
-        case '3': currentSpeedIndex = 2; speedChanged = true; break;
-        case '4': currentSpeedIndex = 3; speedChanged = true; break;
-
-        default: break;
+    // Lowercase mode letters go to menu
+    if (cmd >= 'a' && cmd <= 'z') {
+        if (cmd == 'w' || cmd == 'x' || cmd == 'u') {
+            currentMode = NONE; // return to menu
+            menuActive = true;
+            hasSelectedMode = false;
+            Serial.println("Returning to menu...");
+            return;
+        } else {
+            cmd -= 32;  // Normalize other lowercase letters
+        }
     }
 
-    if (speedChanged) {
-        speedChanged = false;
+    // Speed commands
+    if (cmd >= '1' && cmd <= '4') {
+        currentSpeedIndex = cmd - '1';
+        if (currentSpeedIndex < 0) currentSpeedIndex = 0;
+        if (currentSpeedIndex >= speedLevelsCount) currentSpeedIndex = speedLevelsCount - 1;
         motors_set_speed(speedLevels[currentSpeedIndex]);
-        Serial.print("Speed set to: ");
+        Serial.print("Speed: ");
         Serial.println(speedLevels[currentSpeedIndex]);
+        return;
     }
+
+    // Mode commands
+    switch (cmd) {
+        case 'W': currentMode = AUTONOMOUS; menuActive = false; hasSelectedMode = true; Serial.println("Mode: AUTONOMOUS"); return;
+        case 'X': currentMode = SLAVE;      menuActive = false; hasSelectedMode = true; Serial.println("Mode: SLAVE");      return;
+        case 'U': currentMode = MANUAL;     menuActive = false; hasSelectedMode = true; Serial.println("Mode: MANUAL");     return;
+    }
+
+    // Movement commands only in MANUAL
+    if (currentMode != MANUAL) {
+        Serial.print("Ignored command '"); Serial.print(cmd); Serial.println("' - not in MANUAL mode");
+        return;
+    }
+
+    // Update active command
+    activeCmd = cmd;
+    lastCmdTime = millis(); // reset timer on every command
+}
+
+void bt_update() {
+    bool gotCmd = false;
+
+    // Read all serial input
+    while (Serial.available()) {
+        char cmd = Serial.read();
+        if (cmd == '\r' || cmd == '\n' || cmd == ' ' || cmd == '\0') continue;
+        executeCommand(cmd);
+        gotCmd = true;
+    }
+
+    unsigned long now = millis();
+
+    // If command changed, start new movement immediately
+    if (activeCmd != prevCmd && activeCmd != '\0') {
+        switch (activeCmd) {
+            case 'F': motors_forward();      Serial.println("Got: F (Forward)"); break;
+            case 'B': motors_reverse();      Serial.println("Got: B (Reverse)"); break;
+            case 'L': motors_left();         Serial.println("Got: L (Left)"); break;
+            case 'R': motors_right();        Serial.println("Got: R (Right)"); break;
+            case 'H': motors_correctright(); Serial.println("Got: H (Correct Right)"); break;
+            case 'G': motors_correctleft();  Serial.println("Got: G (Correct Left)"); break;
+            case 'S':
+            case 'C': motors_coast();        Serial.println("Got: S/C (Stop/Coast)"); break;
+            default:  Serial.print("Unknown command: "); Serial.println(activeCmd); break;
+        }
+        prevCmd = activeCmd;
+    }
+
+    // Send stop only if no command received for STOP_DELAY
+    if (activeCmd != '\0' && (now - lastCmdTime > STOP_DELAY)) {
+        motors_coast();
+        Serial.println("Got: S/C (Stop/Coast)");
+        activeCmd = '\0';
+        prevCmd = '\0';
+    }
+
+    // If no serial input, don't overwrite activeCmd until STOP_DELAY
+    if (!gotCmd && activeCmd == '\0') {
+        prevCmd = '\0';
+    }
+}
+
+char bt_get_active_cmd() {
+    return activeCmd;
 }
