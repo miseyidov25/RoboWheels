@@ -14,7 +14,7 @@
 #define LINE_LED 13
 
 // Echo sensor pins
-#define TRiG_PIN 8
+#define TRIG_PIN 8
 #define ECHO_PIN 7
 #define ECHO_PIN2 2
 #define ECHO_PIN3 3

@@ -1,27 +1,66 @@
 #include <Arduino.h>
+#include <Wire.h>
+#include "pins.h"
 #include "motors.h"
-#include "echo.h"
-#include "leds.h"
+#include "line.h"
 #include "bt.h"
+#include "echo.h"
+#include "oled.h"
 #include "pins.h"
 
-const int STOP_DISTANCE_CM = 10;  // Stop if object closer than 10 cm
+// === GLOBAL MODE VARIABLE DEFINED HERE ===
+Mode currentMode = MANUAL;
+
+// === Speed Control ===
+int motorSpeed = 230;
+int motorSpeedAuto = 110;
+
+unsigned long previousMillis = 0;
+
+// make it available to other files:
+int currentEffectiveSpeed() {
+    return (currentMode == AUTONOMOUS) ? motorSpeedAuto : motorSpeed;
+}
 
 void setup() {
-    motors_init();        // Initialize motor pins
+    Serial.begin(9600);
+
+    // Initialize I2C for OLED display
+    Wire.begin();
+
+    motors_init();
     echo_init(TRIG_PIN, ECHO_PIN, ECHO_PIN2, ECHO_PIN3, ECHO_PIN4); // Ultrasonic sensor
-    bt_init();      // Initialize Bluetooth module
+
+    pinMode(LEFT_SENSOR, INPUT);
+    pinMode(MIDDLE_SENSOR, INPUT);
+    pinMode(RIGHT_SENSOR, INPUT);
+    pinMode(LINE_LED, OUTPUT); // CRINGE
+
+    oled_init();  // After echo_init so pins are ready
+    bt_init();
 }
 
 void loop() {
-    
-    bt_update(); // Update Bluetooth commands
-    
-    // unsigned long now = millis();  // Get current time
-    
-    echo_update();        // Read ultrasonic sensor and handle obstacles
+    oled_update();  // Update display and handle button inputs
+    bt_update();    // Handle Bluetooth commands
 
-    
-    // --- LED control ---
-    // leds_update(now, is_test_forward_active(), false, false, false);
+    // Only run mode-specific code if a mode has been selected
+    // (i.e., we're NOT in the menu)
+    if (!menuActive) {
+        // Autonomous mode
+        if (currentMode == AUTONOMOUS) {
+            echo_update();
+        }
+        // Slave mode (line follow)
+        else if (currentMode == SLAVE) {
+            line_update();
+            echo_lineMode(
+                echo_readDistance(ECHO_PIN),
+                echo_readDistance(ECHO_PIN2),
+                echo_readDistance(ECHO_PIN3),
+                echo_readDistance(ECHO_PIN4)
+            );
+        }
+        // Manual mode → nothing here (Bluetooth handles it)
+    }
 }

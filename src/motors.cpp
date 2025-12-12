@@ -2,13 +2,11 @@
 #include "pins.h"
 #include <Arduino.h>
 
-
-// Motor speed (0–255)
-int motorSpeed = 185;
-
 // Speed levels for Bluetooth control
 int speedLevels[] = {120, 150, 185, 220};
 int currentSpeedIndex = 2;  // default = f3 (185)
+int motorDirection = 0;    // 1 = forward, -1 = reverse, 0 = stopped
+
 
 void motors_init() {
     pinMode(IN1, OUTPUT);
@@ -31,6 +29,7 @@ void motors_forward() {
     // Right motor: IN3 forward, IN4 reverse
     analogWrite(IN3, motorSpeed);
     analogWrite(IN4, 0);
+    motorDirection = 1;
 }
 
 void motors_reverse() {
@@ -38,6 +37,7 @@ void motors_reverse() {
     analogWrite(IN2, motorSpeed);
     analogWrite(IN3, 0);
     analogWrite(IN4, motorSpeed);
+    motorDirection = -1;
 }
 
 void motors_left() {
@@ -45,6 +45,15 @@ void motors_left() {
     analogWrite(IN1, 0);
     analogWrite(IN2, motorSpeed);
     analogWrite(IN3, motorSpeed);
+    analogWrite(IN4, 0);
+    motorDirection = 2;
+}
+
+void motors_correctleft() { // dont like it, but sure
+    // Left motor backward, right motor forward
+    analogWrite(IN1, 0);
+    analogWrite(IN2, motorSpeed);
+    analogWrite(IN3, motorSpeed - 30); // slight speed reduction for correction
     analogWrite(IN4, 0);
 }
 
@@ -54,14 +63,15 @@ void motors_right() {
     analogWrite(IN2, 0);
     analogWrite(IN3, 0);
     analogWrite(IN4, motorSpeed);
+    motorDirection = 3;
 }
 
-void motors_brake() {
-    // Both pins high - electrical brake
-    analogWrite(IN1, 255);
-    analogWrite(IN2, 255);
-    analogWrite(IN3, 255);
-    analogWrite(IN4, 255);
+void motors_correctright() { // dont like it, but sure
+    // Left motor forward, right motor backward
+    analogWrite(IN1, motorSpeed);
+    analogWrite(IN2, 0);
+    analogWrite(IN3, 0);
+    analogWrite(IN4, motorSpeed - 30); // slight speed reduction for correction
 }
 
 void motors_coast() {

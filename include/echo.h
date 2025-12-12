@@ -8,5 +8,8 @@ void echo_init(int trigPin, int echoPin, int echoPin2, int echoPin3, int echoPin
 
 // Read distance in cm
 void echo_update();
+int echo_readDistance(int pin);
+void echo_handleObstacles(int frontMid, int back, int frontLeft, int frontRight);
+void echo_lineMode(int frontMid, int back, int frontLeft, int frontRight);
 
 #endif
