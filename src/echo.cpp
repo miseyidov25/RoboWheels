@@ -50,7 +50,7 @@ void echo_handleObstacles(int frontMid, int back, int frontLeft, int frontRight)
         motors_coast();
 
         // Move slightly back to free robot
-        motors_back();
+        motors_reverse();
         delay(200);
         motors_coast();
 
