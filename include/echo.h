@@ -8,9 +8,10 @@
 // echoPinFront: front sensor
 // echoPinLeft: left sensor
 // echoPinRight: right sensor
-void echo_init(int trigPin, int echoPinFront, int echoPinLeft, int echoPinRight);
+// echoPinBack: back sensor
+void echo_init(int trigPin, int echoPinFront, int echoPinLeft, int echoPinRight, int echoPinBack);
 
-// Get distance from a specific sensor (0=front,1=left,2=right)
+// Get distance from a specific sensor (0=front,1=left,2=right,3=back)
 int echo_getDistance(int sensorIndex);
 
 // Update autonomous behavior based on sensor readings

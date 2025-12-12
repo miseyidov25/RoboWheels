@@ -4,61 +4,66 @@
 
 // Pin storage
 static int _trigPin = -1;
-static int _echoPins[3] = {-1, -1, -1}; // 0=front, 1=left, 2=right
+static int _echoPins[4] = {-1, -1, -1, -1}; // 0=front, 1=left, 2=right, 3=back
 
 // Distance storage
-static int _distances[3] = {0, 0, 0};
+static int _distances[4] = {0, 0, 0, 0};
 
-// Minimum valid distance to filter noise
 const int MIN_DISTANCE_CM = 1;
-
-// Number of readings to average
 const int NUM_READINGS = 3;
 
-void echo_init(int trigPin, int echoPinFront, int echoPinLeft, int echoPinRight) {
+void echo_init(int trigPin, int echoPinFront, int echoPinLeft, int echoPinRight, int echoPinBack) {
     _trigPin = trigPin;
     _echoPins[0] = echoPinFront;
     _echoPins[1] = echoPinLeft;
     _echoPins[2] = echoPinRight;
+    _echoPins[3] = echoPinBack;
 
     pinMode(_trigPin, OUTPUT);
     digitalWrite(_trigPin, LOW);
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         pinMode(_echoPins[i], INPUT);
     }
 }
 
 // Read a single sensor once
 static int echo_readSingle(int sensorIndex) {
+    // Temporarily disable all other echo pins
+    for (int i = 0; i < 4; i++) {
+        if (i != sensorIndex)
+            pinMode(_echoPins[i], OUTPUT), digitalWrite(_echoPins[i], LOW);
+    }
+
+    // Fire the trigger pulse
     digitalWrite(_trigPin, LOW);
     delayMicroseconds(2);
     digitalWrite(_trigPin, HIGH);
     delayMicroseconds(10);
     digitalWrite(_trigPin, LOW);
 
-    // Small delay to prevent crosstalk
-    delayMicroseconds(50);
-
     unsigned long duration = pulseIn(_echoPins[sensorIndex], HIGH, 30000UL);
-    if (duration == 0) return 100; // no echo -> far
+
+    // Restore echo pins
+    for (int i = 0; i < 4; i++) {
+        pinMode(_echoPins[i], INPUT);
+    }
+
+    if (duration == 0) return 100;
 
     int distance_cm = (int)(duration * 0.034 / 2);
-
-    // Filter very small false readings
     if (distance_cm < MIN_DISTANCE_CM) distance_cm = 100;
-
     return distance_cm;
 }
 
-// Get averaged distance for one sensor
+// Get averaged distance
 int echo_getDistance(int sensorIndex) {
-    if (_trigPin < 0 || sensorIndex < 0 || sensorIndex > 2) return 100;
+    if (_trigPin < 0 || sensorIndex < 0 || sensorIndex > 3) return 100;
 
     int sum = 0;
     for (int i = 0; i < NUM_READINGS; i++) {
         sum += echo_readSingle(sensorIndex);
-        delay(5); // tiny delay between readings
+        delay(5);
     }
 
     int avgDistance = sum / NUM_READINGS;
@@ -67,45 +72,62 @@ int echo_getDistance(int sensorIndex) {
 }
 
 void echo_update() {
-    // Update all sensors
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         echo_getDistance(i);
     }
 
     int front = _distances[0];
     int left  = _distances[1];
     int right = _distances[2];
+    int back  = _distances[3];
 
-    const int SAFE_DISTANCE = 20; // cm
+    const int SAFE_DISTANCE = 20;
 
-    if(left < SAFE_DISTANCE && front < SAFE_DISTANCE && right < SAFE_DISTANCE){
-        motors_reverse();   // both sides blocked, go back, add later to choose direction
+    // Obstacle avoidance logic
+    if (left < SAFE_DISTANCE && front < SAFE_DISTANCE && right < SAFE_DISTANCE && back < SAFE_DISTANCE) {
+        motors_right();
+        Serial.println("OBSTACLE SURROUNDING ROBOT - Moving right"); 
+    }
+    else if (left < SAFE_DISTANCE && front < SAFE_DISTANCE && right < SAFE_DISTANCE) {
+        motors_reverse();
         Serial.println("LEFT AND RIGHT AND FRONT OBSTACLE - Turning back");
-    } else if(left < SAFE_DISTANCE && front < SAFE_DISTANCE){
+    }
+    else if (left < SAFE_DISTANCE && front < SAFE_DISTANCE) {
         motors_right();
         Serial.println("LEFT AND FRONT OBSTACLE - Turning right");
-    }else if(left < SAFE_DISTANCE && right < SAFE_DISTANCE){
-        motors_reverse();   // both sides blocked, go back, add later to choose direction
+    }
+    else if (left < SAFE_DISTANCE && right < SAFE_DISTANCE) {
+        motors_reverse();
         Serial.println("LEFT AND RIGHT OBSTACLE - Turning back");
-    } else if(front < SAFE_DISTANCE && right < SAFE_DISTANCE){
+    }
+    else if (front < SAFE_DISTANCE && right < SAFE_DISTANCE) {
         motors_left();
         Serial.println("FRONT AND RIGHT OBSTACLE - Turning left");
-    } else if(left < SAFE_DISTANCE){
+    }
+    else if (left < SAFE_DISTANCE) {
         motors_right();
         Serial.println("LEFT OBSTACLE - turning right");
-    }  else if (right < SAFE_DISTANCE) {
+    }
+    else if (right < SAFE_DISTANCE) {
         motors_left();
         Serial.println("RIGHT OBSTACLE - turning left");
-    } else if(front < SAFE_DISTANCE){
+    }
+    else if (front < SAFE_DISTANCE) {
         motors_right();
         Serial.println("FRONT OBSTACLE - Turning right");
-    }else if (front > SAFE_DISTANCE) {
+    }
+    else if (back < SAFE_DISTANCE) {
+        motors_forward();
+        Serial.println("BACK OBSTACLE - Moving forward");
+    }
+    else if (front > SAFE_DISTANCE) {
         motors_forward();
         Serial.println("Autonomous: Forward");
-    } 
+    }
 
-// Debug print distances 
-Serial.print("Front: "); Serial.print(front); 
-Serial.print(" | Left: "); Serial.print(left); 
-Serial.print(" | Right: "); Serial.println(right);
+    // Debug print
+    Serial.print("Front: "); Serial.print(front);
+    Serial.print(" | Left: "); Serial.print(left);
+    Serial.print(" | Right: "); Serial.print(right);
+    Serial.print(" | Back: "); Serial.println(back);
 }

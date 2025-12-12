@@ -30,12 +30,11 @@ void setup() {
     Wire.begin();
 
     motors_init();
-    echo_init(TRIG_PIN, ECHO_PIN1, ECHO_PIN2, ECHO_PIN3);
+    echo_init(TRIG_PIN, ECHO_PIN1, ECHO_PIN2, ECHO_PIN3, ECHO_PIN4);
 
     pinMode(LEFT_SENSOR, INPUT);
     pinMode(MIDDLE_SENSOR, INPUT);
     pinMode(RIGHT_SENSOR, INPUT);
-    pinMode(LINE_LED, OUTPUT);
 
     oled_init(); 
     bt_init();

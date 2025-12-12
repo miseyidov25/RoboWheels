@@ -12,7 +12,6 @@
 #define LEFT_SENSOR 4
 #define MIDDLE_SENSOR 3
 #define RIGHT_SENSOR 2
-#define LINE_LED 13
 
 #define TRIG_PIN 8
 #define ECHO_PIN1 7  //middle forward
