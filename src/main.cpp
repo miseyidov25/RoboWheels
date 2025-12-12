@@ -6,6 +6,7 @@
 #include "bt.h"
 #include "echo.h"
 #include "oled.h"
+#include "leds.h"
 
 
 // GLOBAL MODE VARIABLE DEFINED HERE 
@@ -38,11 +39,16 @@ void setup() {
 
     oled_init(); 
     bt_init();
+    leds_init();
 }
 
 void loop() {
     oled_update();  
-    bt_update();    
+    bt_update();   
+    
+    char cmd = bt_get_active_cmd();
+    leds_update(millis(), cmd == 'F', cmd == 'B', cmd == 'L' || cmd == 'G', cmd == 'R' || cmd == 'H');
+
 
     if (!menuActive) {
         // Autonomous mode

@@ -105,3 +105,7 @@ void bt_update() {
         prevCmd = '\0';
     }
 }
+
+char bt_get_active_cmd() {
+    return activeCmd;
+}

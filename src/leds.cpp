@@ -3,8 +3,8 @@
 #include "motors.h"
 
 // LED pins
-#define LED_L 9
-#define LED_R 10
+#define LED_L A0
+#define LED_R A1
 
 // Blink interval for turn signals
 #define BLINK_INTERVAL 300
@@ -22,17 +22,20 @@ void leds_update(unsigned long now, bool fwd, bool rev, bool left, bool right) {
 
     // Left turn signal
     if (motorDirection == 2 || left) {
-        if ((now / BLINK_INTERVAL) % 2 == 0) digitalWrite(LED_L, HIGH);
+        digitalWrite(LED_L, HIGH);
     }
 
     // Right turn signal
     if (motorDirection == 3 || right) {
-        if ((now / BLINK_INTERVAL) % 2 == 0) digitalWrite(LED_R, HIGH);
+        digitalWrite(LED_R, HIGH);
     }
 
     // Brake LED
-    if (motorDirection == 0 || rev) {
+    if (motorDirection == -1 || rev) {
         digitalWrite(LED_R, HIGH);
         digitalWrite(LED_L, HIGH);
     }
 }
+
+
+

@@ -23,4 +23,6 @@ void bt_init();
 void bt_update();
 void executeCommand(char cmd);
 
+char bt_get_active_cmd();
+
 #endif
