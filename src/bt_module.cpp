@@ -76,7 +76,6 @@ void bt_update() {
 
     unsigned long now = millis();
 
-    // If command changed, start new movement immediately
     if (activeCmd != prevCmd && activeCmd != '\0') {
         switch (activeCmd) {
             case 'F': motors_forward();      Serial.println("Got: F (Forward)"); break;

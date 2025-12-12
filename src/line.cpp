@@ -11,10 +11,9 @@ void line_update() {
 
   // Line-following decisions
   // Compare the sampled boolean values to LOW/HIGH (do NOT call digitalRead(LOW))
-  if (currentEffectiveSpeed(), true) { /* keep compiler quiet if needed */ }
+  if (currentEffectiveSpeed(), true) {}
 
-
-  //LOW = on line, HIGH = off line
+ //LOW = on line, HIGH = off line
 
   if (left == LOW && middle == HIGH && right == LOW) {
     Serial.println("Forward");
