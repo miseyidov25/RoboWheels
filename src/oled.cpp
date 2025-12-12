@@ -119,7 +119,6 @@ void drawStatusScreen() {
 
 void drawMenuScreen() {
     u8g2.setFont(u8g2_font_6x13_tr);
-
     u8g2.firstPage();
     do {
         u8g2.drawStr(0, 12, "Select mode:");
