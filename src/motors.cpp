@@ -23,6 +23,7 @@ void motors_set_speed(int speed) {
 }
 
 void motors_forward() {
+    int s = currentEffectiveSpeed();
     // Left motor: IN1 forward, IN2 reverse
     analogWrite(IN1, motorSpeed);
     analogWrite(IN2, 0);
@@ -34,6 +35,7 @@ void motors_forward() {
 }
 
 void motors_reverse() {
+    int s = currentEffectiveSpeed();
     analogWrite(IN1, 0);
     analogWrite(IN2, motorSpeed);
     analogWrite(IN3, 0);
@@ -42,6 +44,7 @@ void motors_reverse() {
 }
 
 void motors_left() {
+    int s = currentEffectiveSpeed();
     // Left motor backward, right motor forward
     analogWrite(IN1, 0);
     analogWrite(IN2, motorSpeed);
@@ -50,7 +53,8 @@ void motors_left() {
     motorDirection = 2;
 }
 
-void motors_correctleft() { // dont like it, but sure
+void motors_correctleft() {
+    int s = currentEffectiveSpeed(); // dont like it, but sure
     // Left motor backward, right motor forward
     analogWrite(IN1, 0);
     analogWrite(IN2, motorSpeed);
@@ -59,6 +63,7 @@ void motors_correctleft() { // dont like it, but sure
 }
 
 void motors_right() {
+    int s = currentEffectiveSpeed();
     // Left motor forward, right motor backward
     analogWrite(IN1, motorSpeed);
     analogWrite(IN2, 0);
@@ -67,7 +72,8 @@ void motors_right() {
     motorDirection = 3;
 }
 
-void motors_correctright() { // dont like it, but sure
+void motors_correctright() {
+    int s = currentEffectiveSpeed(); // dont like it, but sure
     // Left motor forward, right motor backward
     analogWrite(IN1, motorSpeed);
     analogWrite(IN2, 0);
@@ -76,6 +82,7 @@ void motors_correctright() { // dont like it, but sure
 }
 
 void motors_coast() {
+    int s = currentEffectiveSpeed();
     // All pins low - free spin
     analogWrite(IN1, 0);
     analogWrite(IN2, 0);

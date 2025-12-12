@@ -31,29 +31,58 @@ int echo_readDistance(int pin) {
 
 void echo_handleObstacles(int frontMid, int back, int frontLeft, int frontRight) {
 
-    const int FRONT_STOP = 10;  // cm
+    const int FRONT_STOP = 10; // cm
     const int BACK_STOP  = 10;
-    
-    // Front danger — stop & reverse
-    if ((frontMid > 0  && frontMid  <= FRONT_STOP) ||
-        (frontLeft     > 0  && frontLeft      <= FRONT_STOP) ||
-        (frontRight    > 0  && frontRight     <= FRONT_STOP))
+
+    bool frontBlocked = 
+        (frontMid  > 0 && frontMid  <= FRONT_STOP) ||
+        (frontLeft > 0 && frontLeft <= FRONT_STOP) ||
+        (frontRight > 0 && frontRight <= FRONT_STOP);
+
+    bool backBlocked =
+        (back > 0 && back <= BACK_STOP);
+
+    // ---------------------------
+    // FRONT OBSTACLE HANDLING
+    // ---------------------------
+    if (frontBlocked)
     {
         motors_coast();
 
-        // TODO: simple avoidance maneuver
-        motors_left();
-        delay(150);
+        // Move slightly back to free robot
+        motors_back();
+        delay(200);
+        motors_coast();
+
+        // If left side is more blocked → turn right
+        // If right side is more blocked → turn left
+        if (frontLeft > 0 && frontLeft < frontRight)
+        {
+            motors_right();
+        }
+        else
+        {
+            motors_left();
+        }
+
+        delay(300);
         motors_coast();
         return;
     }
 
-    // Back danger — stop
-    if (back > 0 && back <= BACK_STOP) {
+
+    if (backBlocked)
+    {
+        motors_coast();
+
+        // Move slightly forward to free robot
+        motors_forward();
+        delay(200);
         motors_coast();
         return;
     }
 }
+
 
 void echo_lineMode(int frontMid, int back, int frontLeft, int frontRight) {
 
