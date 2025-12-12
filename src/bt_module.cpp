@@ -27,6 +27,7 @@ void executeCommand(char cmd) {
             currentMode = NONE; // return to menu
             menuActive = true;
             hasSelectedMode = false;
+            motors_coast();
             Serial.println("Returning to menu...");
             return;
         } else {

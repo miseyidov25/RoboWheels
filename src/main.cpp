@@ -57,12 +57,6 @@ void loop() {
         // Slave mode (line follow)
         else if (currentMode == SLAVE) {
             line_update();
-            echo_lineMode(
-                echo_readDistance(ECHO_PIN1),
-                echo_readDistance(ECHO_PIN2),
-                echo_readDistance(ECHO_PIN3),
-                echo_readDistance(ECHO_PIN4)
-            );
         }
         // Manual mode -> nothing here (Bluetooth handles it)
     }

@@ -3,13 +3,18 @@
 
 #include <Arduino.h>
 
-// Initialize the sensor pins
-void echo_init(int trigPin, int echoPin, int echoPin2, int echoPin3, int echoPin4);
+// Initialize the 3 front sensors
+// trigPin: trigger pin for all sensors
+// echoPinFront: front sensor
+// echoPinLeft: left sensor
+// echoPinRight: right sensor
+// echoPinBack: back sensor
+void echo_init(int trigPin, int echoPinFront, int echoPinLeft, int echoPinRight, int echoPinBack);
 
-// Read distance in cm
+// Get distance from a specific sensor (0=front,1=left,2=right,3=back)
+int echo_getDistance(int sensorIndex);
+
+// Update autonomous behavior based on sensor readings
 void echo_update();
-int echo_readDistance(int pin);
-void echo_handleObstacles(int frontMid, int back, int frontLeft, int frontRight);
-void echo_lineMode(int frontMid, int back, int frontLeft, int frontRight);
 
 #endif
