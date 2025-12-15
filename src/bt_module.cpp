@@ -6,9 +6,6 @@
 extern Mode currentMode;
 extern bool menuActive;
 extern bool hasSelectedMode;
-extern int currentSpeedIndex;
-extern int speedLevels[];
-extern const int speedLevelsCount;
 
 // Track active command and previous state
 static char activeCmd = '\0';

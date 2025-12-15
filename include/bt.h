@@ -13,10 +13,6 @@ enum Mode {
 // Declare the global variable (but DO NOT define it)
 extern Mode currentMode;
 
-// Speed index variables from bt_module
-extern int currentSpeedIndex;
-extern int speedLevels[];
-extern const int speedLevelsCount;
 
 // Functions
 void bt_init();

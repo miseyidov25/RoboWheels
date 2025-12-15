@@ -20,20 +20,27 @@ void leds_update(unsigned long now, bool fwd, bool rev, bool left, bool right) {
     digitalWrite(LED_L, LOW);
     digitalWrite(LED_R, LOW);
 
-    // Left turn signal
-    if (motorDirection == 2 || left) {
+    /* Left turn indicator */
+    if (motorDirection == MOTOR_LEFT ||
+        motorDirection == MOTOR_CORRECT_LEFT ||
+        left)
+    {
         digitalWrite(LED_L, HIGH);
     }
 
-    // Right turn signal
-    if (motorDirection == 3 || right) {
+    /* Right turn indicator */
+    if (motorDirection == MOTOR_RIGHT ||
+        motorDirection == MOTOR_CORRECT_RIGHT ||
+        right)
+    {
         digitalWrite(LED_R, HIGH);
     }
 
-    // Brake LED
-    if (motorDirection == -1 || rev) {
-        digitalWrite(LED_R, HIGH);
+    /* Brake / reverse indicator */
+    if (motorDirection == MOTOR_REVERSE || rev)
+    {
         digitalWrite(LED_L, HIGH);
+        digitalWrite(LED_R, HIGH);
     }
 }
 

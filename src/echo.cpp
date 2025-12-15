@@ -24,7 +24,7 @@ void echo_init(int trigPin, int echoPin, int echoPin2, int echoPin3, int echoPin
 }
 
 int echo_readDistance(int pin) {
-    unsigned long duration = pulseIn(pin, HIGH, 30000);
+    unsigned long duration = pulseIn(pin, HIGH, 30000UL);
     if (duration == 0) return 0;
     return duration * 0.034 / 2;
 }
@@ -108,6 +108,8 @@ void echo_lineMode(int frontMid, int back, int frontLeft, int frontRight) {
 
 void echo_update() {
     // Trigger the sensor
+    digitalWrite(_trigPin, LOW);
+    delayMicroseconds(2);
     digitalWrite(_trigPin, HIGH);
     delayMicroseconds(10);
     digitalWrite(_trigPin, LOW);
