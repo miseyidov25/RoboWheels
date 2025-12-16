@@ -21,9 +21,7 @@
 // Cached distances
 static int distances[NUM_SENSORS] = {0};
 
-// --------------------------------------------------
 // Trigger pulse
-// --------------------------------------------------
 static inline void trig_pulse(void) {
     PORTB &= ~(1 << PB0);
     _delay_us(2);
@@ -32,9 +30,7 @@ static inline void trig_pulse(void) {
     PORTB &= ~(1 << PB0);
 }
 
-// --------------------------------------------------
 // Measure echo pulse width
-// --------------------------------------------------
 static unsigned long read_echo_us(volatile uint8_t* pinReg, uint8_t bit) {
     unsigned long time = 0;
 
@@ -54,9 +50,7 @@ static unsigned long read_echo_us(volatile uint8_t* pinReg, uint8_t bit) {
     return time;
 }
 
-// --------------------------------------------------
 // Single sensor read
-// --------------------------------------------------
 static int echo_readSingle(uint8_t sensorIndex) {
     unsigned long duration_us = 0;
 
@@ -81,9 +75,7 @@ static int echo_readSingle(uint8_t sensorIndex) {
     return distance_cm;
 }
 
-// --------------------------------------------------
 // Initialization
-// --------------------------------------------------
 
 void echo_init(void) {
     // TRIG = D8 (PB0)
@@ -108,9 +100,7 @@ int echo_getDistance(uint8_t sensorIndex) {
     return distances[sensorIndex];
 }
 
-// --------------------------------------------------
 // Main obstacle logic
-// --------------------------------------------------
 void echo_update(void) {
     for (uint8_t i = 0; i < NUM_SENSORS; i++) {
         echo_getDistance(i);
