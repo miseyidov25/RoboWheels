@@ -1,35 +1,66 @@
 #include <Arduino.h>
+#include <Wire.h>
+#include "pins.h"
 #include "motors.h"
-#include "echo.h"
-#include "leds.h"
+#include "line.h"
 #include "bt.h"
+#include "echo.h"
+#include "oled.h"
+#include "leds.h"
 
-// Define pins for ultrasonic sensor
-const int TRIG_PIN = 8;
-const int ECHO_PIN = 7;
-const int STOP_DISTANCE_CM = 10;  // Stop if object closer than 10 cm
+
+// GLOBAL MODE VARIABLE DEFINED HERE 
+Mode currentMode = NONE;
+
+
+unsigned long previousMillis = 0;
+
+// make it available to other files:
+int currentEffectiveSpeed() {
+    return (currentMode == AUTONOMOUS) ? motorSpeedAuto : motorSpeed;
+}
 
 void setup() {
-    motors_init();        // Initialize motor pins
-    echo_init(TRIG_PIN, ECHO_PIN); // Ultrasonic sensor
-    bt_init();      // Initialize Bluetooth module
+    Serial.begin(9600);
+
+    // Initialize I2C for OLED display
+    Wire.begin();
+
+    motors_init();
+    echo_init(TRIG_PIN, ECHO_PIN1, ECHO_PIN2, ECHO_PIN3, ECHO_PIN4);
+
+    pinMode(LEFT_SENSOR, INPUT);
+    pinMode(MIDDLE_SENSOR, INPUT);
+    pinMode(RIGHT_SENSOR, INPUT);
+
+    oled_init(); 
+    bt_init();
+    leds_init();
 }
 
 void loop() {
+    oled_update();  
+    bt_update();   
     
-    bt_update(); // Update Bluetooth commands
-    
-    // unsigned long now = millis();  // Get current time
-    // int distance = echo_getDistance();
-    // bool obstacle = (distance > 0 && distance <= STOP_DISTANCE_CM);
+    char cmd = bt_get_active_cmd();
+    leds_update(millis(), cmd == 'F', cmd == 'B', cmd == 'L' || cmd == 'G', cmd == 'R' || cmd == 'H');
 
-    // if (obstacle) {
-    //     motors_coast();
-    //     motors_reverse();
-    //     delay(100);
-    //     motors_coast();
-    // }
 
-    // --- LED control ---
-    // leds_update(now, is_test_forward_active(), false, false, false);
+    if (!menuActive) {
+        // Autonomous mode
+        if (currentMode == AUTONOMOUS) {
+            echo_update();
+        }
+        // Slave mode (line follow)
+        else if (currentMode == SLAVE) {
+            line_update();
+            echo_lineMode(
+                echo_readDistance(ECHO_PIN1),
+                echo_readDistance(ECHO_PIN2),
+                echo_readDistance(ECHO_PIN3),
+                echo_readDistance(ECHO_PIN4)
+            );
+        }
+        // Manual mode -> nothing here (Bluetooth handles it)
+    }
 }
