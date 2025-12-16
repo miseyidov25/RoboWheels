@@ -5,9 +5,9 @@
 
 void line_update() {
   
-  bool left = digitalRead(LEFT_SENSOR);
-  bool middle = digitalRead(MIDDLE_SENSOR);
-  bool right = digitalRead(RIGHT_SENSOR);
+  bool left   = !(PIND & (1 << PD4));
+  bool middle = !(PIND & (1 << PD3));
+  bool right  = !(PIND & (1 << PD2));
 
   // Line-following decisions
   // Compare the sampled boolean values to LOW/HIGH (do NOT call digitalRead(LOW))

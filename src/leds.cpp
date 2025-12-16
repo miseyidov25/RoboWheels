@@ -1,41 +1,29 @@
 #include "leds.h"
-#include <Arduino.h>
 #include "motors.h"
-
-// LED pins
-#define LED_L A0
-#define LED_R A1
-
-// Blink interval for turn signals
-#define BLINK_INTERVAL 300
+#include <avr/io.h>
+#include "pins.h"
 
 void leds_init() {
-    pinMode(LED_L, OUTPUT);
-    pinMode(LED_R, OUTPUT);
+    // A0 = PC0, A1 = PC1 → OUTPUT
+    DDRC |= (1 << PC0) | (1 << PC1);
 }
 
-// Update LED states based on input
 void leds_update(unsigned long now, bool fwd, bool rev, bool left, bool right) {
-    // Turn all LEDs off by default
-    digitalWrite(LED_L, LOW);
-    digitalWrite(LED_R, LOW);
+    // Turn both LEDs OFF
+    PORTC &= ~((1 << PC0) | (1 << PC1));
 
-    // Left turn signal
+    // Left indicator
     if (motorDirection == 2 || left) {
-        digitalWrite(LED_L, HIGH);
+        PORTC |= (1 << PC0);
     }
 
-    // Right turn signal
+    // Right indicator
     if (motorDirection == 3 || right) {
-        digitalWrite(LED_R, HIGH);
+        PORTC |= (1 << PC1);
     }
 
-    // Brake LED
+    // Brake / reverse
     if (motorDirection == -1 || rev) {
-        digitalWrite(LED_R, HIGH);
-        digitalWrite(LED_L, HIGH);
+        PORTC |= (1 << PC0) | (1 << PC1);
     }
 }
-
-
-

@@ -1,74 +1,90 @@
 #include "echo.h"
-#include "pins.h"
 #include "motors.h"
+#include <avr/io.h>
+#include <util/delay.h>
+#include "pins.h"
 
-// Pin storage
-static int _trigPin = -1;
-static int _echoPins[4] = {-1, -1, -1, -1}; // 0=front, 1=left, 2=right, 3=back
+// Sensor index mapping
+// 0 = front (D7 / PD7)
+// 1 = left  (D11 / PB3)
+// 2 = right (D12 / PB4)
+// 3 = back  (D13 / PB5)
 
-// Distance storage
+// Distances
 static int _distances[4] = {0, 0, 0, 0};
 
 const int MIN_DISTANCE_CM = 1;
-const int NUM_READINGS = 3;
+const int NUM_READINGS   = 3;
 
-void echo_init(int trigPin, int echoPinFront, int echoPinLeft, int echoPinRight, int echoPinBack) {
-    _trigPin = trigPin;
-    _echoPins[0] = echoPinFront;
-    _echoPins[1] = echoPinLeft;
-    _echoPins[2] = echoPinRight;
-    _echoPins[3] = echoPinBack;
 
-    pinMode(_trigPin, OUTPUT);
-    digitalWrite(_trigPin, LOW);
-
-    for (int i = 0; i < 4; i++) {
-        pinMode(_echoPins[i], INPUT);
-    }
+static inline void trig_pulse() {
+    PORTB &= ~(1 << PB0);   // D8 LOW
+    _delay_us(2);
+    PORTB |=  (1 << PB0);   // D8 HIGH
+    _delay_us(10);
+    PORTB &= ~(1 << PB0);   // D8 LOW
 }
 
-// Read a single sensor once
-static int echo_readSingle(int sensorIndex) {
-    // Temporarily disable all other echo pins
-    for (int i = 0; i < 4; i++) {
-        if (i != sensorIndex)
-            pinMode(_echoPins[i], OUTPUT), digitalWrite(_echoPins[i], LOW);
+static unsigned long read_echo(volatile uint8_t* pinReg, uint8_t bit) {
+    unsigned long timeout = 0;
+
+    // wait for HIGH
+    while (!(*pinReg & (1 << bit))) {
+        if (++timeout > 30000) return 0;
     }
 
-    // Fire the trigger pulse
-    digitalWrite(_trigPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(_trigPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(_trigPin, LOW);
+    unsigned long width = 0;
+    while (*pinReg & (1 << bit)) {
+        if (++width > 30000) break;
+    }
 
-    unsigned long duration = pulseIn(_echoPins[sensorIndex], HIGH, 30000UL);
+    return width;
+}
 
-    // Restore echo pins
-    for (int i = 0; i < 4; i++) {
-        pinMode(_echoPins[i], INPUT);
+static int echo_readSingle(int sensorIndex) {
+    trig_pulse();
+
+    unsigned long duration = 0;
+
+    switch (sensorIndex) {
+        case 0: duration = read_echo(&PIND, PD7); break; // front
+        case 1: duration = read_echo(&PINB, PB3); break; // left
+        case 2: duration = read_echo(&PINB, PB4); break; // right
+        case 3: duration = read_echo(&PINB, PB5); break; // back
+        default: return 100;
     }
 
     if (duration == 0) return 100;
 
     int distance_cm = (int)(duration * 0.034 / 2);
     if (distance_cm < MIN_DISTANCE_CM) distance_cm = 100;
+
     return distance_cm;
 }
 
-// Get averaged distance
+// PUBLIC API 
+
+void echo_init(int, int, int, int, int) {
+    // TRIG = D8 = PB0
+    DDRB  |=  (1 << PB0);
+    PORTB &= ~(1 << PB0);
+
+    // Echo pins as INPUT
+    DDRD &= ~(1 << PD7);                     // D7
+    DDRB &= ~((1 << PB3) | (1 << PB4) | (1 << PB5)); // D11,12,13
+}
+
 int echo_getDistance(int sensorIndex) {
-    if (_trigPin < 0 || sensorIndex < 0 || sensorIndex > 3) return 100;
+    if (sensorIndex < 0 || sensorIndex > 3) return 100;
 
     int sum = 0;
     for (int i = 0; i < NUM_READINGS; i++) {
         sum += echo_readSingle(sensorIndex);
-        delay(5);
+        _delay_ms(5);
     }
 
-    int avgDistance = sum / NUM_READINGS;
-    _distances[sensorIndex] = avgDistance;
-    return avgDistance;
+    _distances[sensorIndex] = sum / NUM_READINGS;
+    return _distances[sensorIndex];
 }
 
 void echo_update() {
