@@ -10,140 +10,154 @@
 // 2 = right (D12 / PB4)
 // 3 = back  (D13 / PB5)
 
-// Distances
-static int _distances[4] = {0, 0, 0, 0};
+#define NUM_SENSORS       4
+#define NUM_READINGS      3
+#define MIN_DISTANCE_CM   2
+#define MAX_DISTANCE_CM   100
+#define SAFE_DISTANCE     30
 
-const int MIN_DISTANCE_CM = 1;
-const int NUM_READINGS   = 3;
+#define ECHO_TIMEOUT_US   30000UL   // 30ms
 
+// Cached distances
+static int distances[NUM_SENSORS] = {0};
 
-static inline void trig_pulse() {
-    PORTB &= ~(1 << PB0);   // D8 LOW
+// --------------------------------------------------
+// Trigger pulse
+// --------------------------------------------------
+static inline void trig_pulse(void) {
+    PORTB &= ~(1 << PB0);
     _delay_us(2);
-    PORTB |=  (1 << PB0);   // D8 HIGH
+    PORTB |=  (1 << PB0);
     _delay_us(10);
-    PORTB &= ~(1 << PB0);   // D8 LOW
+    PORTB &= ~(1 << PB0);
 }
 
-static unsigned long read_echo(volatile uint8_t* pinReg, uint8_t bit) {
-    unsigned long timeout = 0;
+// --------------------------------------------------
+// Measure echo pulse width
+// --------------------------------------------------
+static unsigned long read_echo_us(volatile uint8_t* pinReg, uint8_t bit) {
+    unsigned long time = 0;
 
-    // wait for HIGH
+    // Wait for HIGH
     while (!(*pinReg & (1 << bit))) {
-        if (++timeout > 30000) return 0;
+        if (++time >= ECHO_TIMEOUT_US) return 0;
+        _delay_us(1);
     }
 
-    unsigned long width = 0;
+    // Measure HIGH width
+    time = 0;
     while (*pinReg & (1 << bit)) {
-        if (++width > 30000) break;
+        if (++time >= ECHO_TIMEOUT_US) break;
+        _delay_us(1);
     }
 
-    return width;
+    return time;
 }
 
-static int echo_readSingle(int sensorIndex) {
-    trig_pulse();
+// --------------------------------------------------
+// Single sensor read
+// --------------------------------------------------
+static int echo_readSingle(uint8_t sensorIndex) {
+    unsigned long duration_us = 0;
 
-    unsigned long duration = 0;
+    trig_pulse();
+    _delay_us(200); // sensor settle time
 
     switch (sensorIndex) {
-        case 0: duration = read_echo(&PIND, PD7); break; // front
-        case 1: duration = read_echo(&PINB, PB3); break; // left
-        case 2: duration = read_echo(&PINB, PB4); break; // right
-        case 3: duration = read_echo(&PINB, PB5); break; // back
-        default: return 100;
+        case 0: duration_us = read_echo_us(&PIND, PD7); break;
+        case 1: duration_us = read_echo_us(&PINB, PB3); break;
+        case 2: duration_us = read_echo_us(&PINB, PB4); break;
+        case 3: duration_us = read_echo_us(&PINB, PB5); break;
+        default: return MAX_DISTANCE_CM;
     }
 
-    if (duration == 0) return 100;
+    if (duration_us == 0) return MAX_DISTANCE_CM;
 
-    int distance_cm = (int)(duration * 0.034 / 2);
-    if (distance_cm < MIN_DISTANCE_CM) distance_cm = 100;
+    int distance_cm = (int)(duration_us * 0.034f / 2.0f);
+
+    if (distance_cm < MIN_DISTANCE_CM || distance_cm > MAX_DISTANCE_CM)
+        return MAX_DISTANCE_CM;
 
     return distance_cm;
 }
 
-// PUBLIC API 
+// --------------------------------------------------
+// Initialization
+// --------------------------------------------------
 
-void echo_init(int, int, int, int, int) {
-    // TRIG = D8 = PB0
+void echo_init(void) {
+    // TRIG = D8 (PB0)
     DDRB  |=  (1 << PB0);
     PORTB &= ~(1 << PB0);
 
-    // Echo pins as INPUT
-    DDRD &= ~(1 << PD7);                     // D7
-    DDRB &= ~((1 << PB3) | (1 << PB4) | (1 << PB5)); // D11,12,13
+    // Echo pins INPUT
+    DDRD &= ~(1 << PD7);
+    DDRB &= ~((1 << PB3) | (1 << PB4) | (1 << PB5));
 }
 
-int echo_getDistance(int sensorIndex) {
-    if (sensorIndex < 0 || sensorIndex > 3) return 100;
+int echo_getDistance(uint8_t sensorIndex) {
+    if (sensorIndex >= NUM_SENSORS) return MAX_DISTANCE_CM;
 
     int sum = 0;
-    for (int i = 0; i < NUM_READINGS; i++) {
+    for (uint8_t i = 0; i < NUM_READINGS; i++) {
         sum += echo_readSingle(sensorIndex);
         _delay_ms(5);
     }
 
-    _distances[sensorIndex] = sum / NUM_READINGS;
-    return _distances[sensorIndex];
+    distances[sensorIndex] = sum / NUM_READINGS;
+    return distances[sensorIndex];
 }
 
-void echo_update() {
-    for (int i = 0; i < 4; i++) {
+// --------------------------------------------------
+// Main obstacle logic
+// --------------------------------------------------
+void echo_update(void) {
+    for (uint8_t i = 0; i < NUM_SENSORS; i++) {
         echo_getDistance(i);
     }
 
-    int front = _distances[0];
-    int left  = _distances[1];
-    int right = _distances[2];
-    int back  = _distances[3];
+    int front = distances[0];
+    int left  = distances[1];
+    int right = distances[2];
+    int back  = distances[3];
 
-    const int SAFE_DISTANCE = 30;
+    if (left < SAFE_DISTANCE && front < SAFE_DISTANCE &&
+        right < SAFE_DISTANCE && back < SAFE_DISTANCE) {
 
-    // Obstacle avoidance logic
-    if (left < SAFE_DISTANCE && front < SAFE_DISTANCE && right < SAFE_DISTANCE && back < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("OBSTACLE SURROUNDING ROBOT - Moving right"); 
+        Serial.println("SURROUNDED - turning right");
     }
-    else if (left < SAFE_DISTANCE && front < SAFE_DISTANCE && right < SAFE_DISTANCE) {
-        motors_reverse();
-        Serial.println("LEFT AND RIGHT AND FRONT OBSTACLE - Turning back");
-    }
-    else if (left < SAFE_DISTANCE && front < SAFE_DISTANCE) {
+    else if (front < SAFE_DISTANCE && left < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("LEFT AND FRONT OBSTACLE - Turning right");
-    }
-    else if (left < SAFE_DISTANCE && right < SAFE_DISTANCE) {
-        motors_reverse();
-        Serial.println("LEFT AND RIGHT OBSTACLE - Turning back");
+        Serial.println("FRONT+LEFT - turning right");
     }
     else if (front < SAFE_DISTANCE && right < SAFE_DISTANCE) {
         motors_left();
-        Serial.println("FRONT AND RIGHT OBSTACLE - Turning left");
+        Serial.println("FRONT+RIGHT - turning left");
     }
     else if (left < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("LEFT OBSTACLE - turning right");
+        Serial.println("LEFT obstacle");
     }
     else if (right < SAFE_DISTANCE) {
         motors_left();
-        Serial.println("RIGHT OBSTACLE - turning left");
+        Serial.println("RIGHT obstacle");
     }
     else if (front < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("FRONT OBSTACLE - Turning right");
+        Serial.println("FRONT obstacle");
     }
     else if (back < SAFE_DISTANCE) {
         motors_forward();
-        Serial.println("BACK OBSTACLE - Moving forward");
+        Serial.println("BACK obstacle");
     }
-    else if (front > SAFE_DISTANCE) {
+    else {
         motors_forward();
-        Serial.println("Autonomous: Forward");
+        Serial.println("Forward");
     }
 
-    // Debug print
-    Serial.print("Front: "); Serial.print(front);
-    Serial.print(" | Left: "); Serial.print(left);
-    Serial.print(" | Right: "); Serial.print(right);
-    Serial.print(" | Back: "); Serial.println(back);
+    Serial.print("F: "); Serial.print(front);
+    Serial.print(" L: "); Serial.print(left);
+    Serial.print(" R: "); Serial.print(right);
+    Serial.print(" B: "); Serial.println(back);
 }

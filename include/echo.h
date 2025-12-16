@@ -1,20 +1,21 @@
 #ifndef ECHO_H
 #define ECHO_H
 
-#include <Arduino.h>
+#include <stdint.h>
 
-// Initialize the 3 front sensors
-// trigPin: trigger pin for all sensors
-// echoPinFront: front sensor
-// echoPinLeft: left sensor
-// echoPinRight: right sensor
-// echoPinBack: back sensor
-void echo_init(int trigPin, int echoPinFront, int echoPinLeft, int echoPinRight, int echoPinBack);
+// Sensor index mapping
+// 0 = front
+// 1 = left
+// 2 = right
+// 3 = back
 
-// Get distance from a specific sensor (0=front,1=left,2=right,3=back)
-int echo_getDistance(int sensorIndex);
+// Initialize ultrasonic sensors (fixed pins, AVR registers)
+void echo_init(void);
 
-// Update autonomous behavior based on sensor readings
-void echo_update();
+// Get distance in centimeters from a specific sensor
+int echo_getDistance(uint8_t sensorIndex);
+
+// Update all sensors and perform obstacle-avoidance logic
+void echo_update(void);
 
 #endif
