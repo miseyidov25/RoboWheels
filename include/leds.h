@@ -1,14 +1,21 @@
 #ifndef LEDS_H
 #define LEDS_H
 
-#include <Arduino.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Initialize LED pins
-void leds_init();
+void leds_init(void);
 
 // Update LEDs based on current button states and time
-void leds_update(unsigned long now, bool fwd, bool rev, bool left, bool right);
+void leds_update(void);
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif

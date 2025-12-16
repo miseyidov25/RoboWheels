@@ -3,27 +3,27 @@
 #include <avr/io.h>
 #include "pins.h"
 
-void leds_init() {
+void leds_init(void) {
     // A0 = PC0, A1 = PC1 → OUTPUT
     DDRC |= (1 << PC0) | (1 << PC1);
 }
 
-void leds_update(unsigned long now, bool fwd, bool rev, bool left, bool right) {
+void leds_update(void) {
     // Turn both LEDs OFF
     PORTC &= ~((1 << PC0) | (1 << PC1));
 
     // Left indicator
-    if (motorDirection == 2 || left) {
+    if (motorDirection == MOTOR_LEFT || motorDirection == MOTOR_CORRECT_LEFT) {
         PORTC |= (1 << PC0);
     }
 
     // Right indicator
-    if (motorDirection == 3 || right) {
+    if (motorDirection == MOTOR_RIGHT || motorDirection == MOTOR_CORRECT_RIGHT) {
         PORTC |= (1 << PC1);
     }
 
-    // Brake / reverse
-    if (motorDirection == -1 || rev) {
+    // Reverse
+    if (motorDirection == MOTOR_REVERSE) {
         PORTC |= (1 << PC0) | (1 << PC1);
     }
 }

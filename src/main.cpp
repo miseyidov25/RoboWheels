@@ -43,7 +43,7 @@ void loop() {
     bt_update();   
     
     char cmd = bt_get_active_cmd();
-    leds_update(millis(), cmd == 'F', cmd == 'B', cmd == 'L' || cmd == 'G', cmd == 'R' || cmd == 'H');
+    leds_update();
 
 
     if (!menuActive) {
