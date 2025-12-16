@@ -12,9 +12,6 @@
 // GLOBAL MODE VARIABLE DEFINED HERE 
 Mode currentMode = NONE;
 
-// Speed Control
-int motorSpeed = 230;
-int motorSpeedAuto = 110;
 
 unsigned long previousMillis = 0;
 

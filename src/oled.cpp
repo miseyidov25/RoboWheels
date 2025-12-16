@@ -45,12 +45,20 @@ Mode ui_get_current_mode();
 
 // HELPER FUNCTIONS 
 
-static const char* getCurrentDirection() {
-    return motorDirection == 1 ? "Fwd" :
-           motorDirection == -1 ? "Rev" :
-           motorDirection == 2 ? "Left" :
-           motorDirection == 3 ? "Right" : "Stop";
+static const char* getCurrentDirection(void)
+{
+    switch (motorDirection)
+    {
+        case MOTOR_FORWARD:       return "Fwd";
+        case MOTOR_REVERSE:       return "Rev";
+        case MOTOR_LEFT:          return "Left";
+        case MOTOR_RIGHT:         return "Right";
+        case MOTOR_CORRECT_LEFT:  return "Corr L";
+        case MOTOR_CORRECT_RIGHT: return "Corr R";
+        default:                  return "Stop";
+    }
 }
+    
 
 static int getCurrentSpeed() {
     return currentEffectiveSpeed();

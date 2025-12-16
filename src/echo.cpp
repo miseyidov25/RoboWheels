@@ -125,39 +125,33 @@ void echo_update(void) {
         right < SAFE_DISTANCE && back < SAFE_DISTANCE) {
 
         motors_right();
-        Serial.println("SURROUNDED - turning right");
+
     }
     else if (front < SAFE_DISTANCE && left < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("FRONT+LEFT - turning right");
+
     }
     else if (front < SAFE_DISTANCE && right < SAFE_DISTANCE) {
         motors_left();
-        Serial.println("FRONT+RIGHT - turning left");
+
     }
     else if (left < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("LEFT obstacle");
+
     }
     else if (right < SAFE_DISTANCE) {
         motors_left();
-        Serial.println("RIGHT obstacle");
+
     }
     else if (front < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("FRONT obstacle");
+
     }
     else if (back < SAFE_DISTANCE) {
         motors_forward();
-        Serial.println("BACK obstacle");
     }
     else {
         motors_forward();
-        Serial.println("Forward");
-    }
 
-    Serial.print("F: "); Serial.print(front);
-    Serial.print(" L: "); Serial.print(left);
-    Serial.print(" R: "); Serial.print(right);
-    Serial.print(" B: "); Serial.println(back);
+    }
 }

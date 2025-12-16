@@ -1,95 +1,89 @@
-#include "motors.h"
-#include "pins.h"
-#include <Arduino.h>
-#include "bt.h"    // for currentEffectiveSpeed()
+// #include "motors.h"
+// #include "pins.h"
+// #include <Arduino.h>
+
+// // Speed levels for Bluetooth control
+// int speedLevels[] = {120, 150, 185, 220};
+// int currentSpeedIndex = 2;  // default = f3 (185)
+// int motorDirection = 0;    // 1 = forward, -1 = reverse, 0 = stopped
+// const int speedLevelsCount = sizeof(speedLevels) / sizeof(speedLevels[0]);
 
 
-extern int currentEffectiveSpeed();  // declare function
-int motorDirection = 0;   // 0=stop, 1=fwd, -1=rev, 2=left, 3=right
+// void motors_init() {
+//     pinMode(IN1, OUTPUT);
+//     pinMode(IN2, OUTPUT);
+//     pinMode(IN3, OUTPUT);
+//     pinMode(IN4, OUTPUT);
 
+//     motors_coast();
+// }
 
-// Definitions (exactly one definition here for speedLevels and index)
-int speedLevels[] = {120, 150, 185, 220};
-int currentSpeedIndex = 2;                     // default -> speedLevels[2] = 185
-const int speedLevelsCount = sizeof(speedLevels) / sizeof(speedLevels[0]);
+// void motors_set_speed(int speed) {
+//     motorSpeed = constrain(speed, 0, 255);  
+// }
 
-void motors_init() {
-    pinMode(IN1, OUTPUT);
-    pinMode(IN2, OUTPUT);
-    pinMode(IN3, OUTPUT);
-    pinMode(IN4, OUTPUT);
-    motors_coast();
-}
+// void motors_forward() {
+//     // Left motor: IN1 forward, IN2 reverse
+//     analogWrite(IN1, motorSpeed);
+//     analogWrite(IN2, 0);
 
-void motors_set_speed(int speed) {
-    // motorSpeed is extern (defined in main.cpp)
-    motorSpeed = constrain(speed, 0, 255);
-}
+//     // Right motor: IN3 forward, IN4 reverse
+//     analogWrite(IN3, motorSpeed);
+//     analogWrite(IN4, 0);
+//     motorDirection = 1;
+// }
 
-// Motor Control Functions (PWM) 
-void motors_forward() {
-  int s = currentEffectiveSpeed();
-  // left motor forward
-  analogWrite(IN1, s);
-  analogWrite(IN2, 0);
-  // right motor forward
-  analogWrite(IN3, s);
-  analogWrite(IN4, 0);
-  motorDirection = 1;
-}
-void motors_reverse() {
-  int s = currentEffectiveSpeed();
-  analogWrite(IN1, 0);
-  analogWrite(IN2, s);
-  analogWrite(IN3, 0);
-  analogWrite(IN4, s);
-  motorDirection = -1;
-}
-void motors_left() {
-  int s = currentEffectiveSpeed();
-  analogWrite(IN1, 0);
-  analogWrite(IN2, s);
-  analogWrite(IN3, s);
-  analogWrite(IN4, 0);
-  motorDirection = 2;
-}
-void motors_correctleft() {
-  // Slight left turn - reduce left side speed
-  int s = currentEffectiveSpeed();
-  analogWrite(IN1, s - 30);
-  analogWrite(IN2, 0);
-  analogWrite(IN3, s);
-  analogWrite(IN4, 0);
-  motorDirection = 2;
-}
-void motors_right() {
-  int s = currentEffectiveSpeed();
-  analogWrite(IN1, s);
-  analogWrite(IN2, 0);
-  analogWrite(IN3, 0);
-  analogWrite(IN4, s);
-  motorDirection = 3;
-}
-void motors_correctright() {
-  // Slight right turn - reduce right side speed
-  int s = currentEffectiveSpeed();
-  analogWrite(IN1, s);
-  analogWrite(IN2, 0);
-  analogWrite(IN3, 0);
-  analogWrite(IN4, s - 30);
-  motorDirection = 3;
-}
-void motors_brake() {
-  analogWrite(IN1, 255);
-  analogWrite(IN2, 255);
-  analogWrite(IN3, 255);
-  analogWrite(IN4, 255);
-  motorDirection = 0;
-}
-void motors_coast() {
-  analogWrite(IN1, 0);
-  analogWrite(IN2, 0);
-  analogWrite(IN3, 0);
-  analogWrite(IN4, 0);
-  motorDirection = 0;
-}
+// void motors_reverse() {
+//     analogWrite(IN1, 0);
+//     analogWrite(IN2, motorSpeed);
+//     analogWrite(IN3, 0);
+//     analogWrite(IN4, motorSpeed);
+//     motorDirection = -1;
+// }
+
+// void motors_left() {
+//     // Left motor backward, right motor forward
+//     analogWrite(IN1, 0);
+//     analogWrite(IN2, motorSpeed);
+//     analogWrite(IN3, motorSpeed);
+//     analogWrite(IN4, 0);
+//     motorDirection = 2;
+// }
+
+// void motors_correctleft() {
+//     // Left motor backward, right motor forward
+//     analogWrite(IN1, 0);
+//     analogWrite(IN2, motorSpeed);
+//     analogWrite(IN3, motorSpeed - 30); // slight speed reduction for correction
+//     analogWrite(IN4, 0);
+// }
+
+// void motors_right() {
+//     // Left motor forward, right motor backward
+//     analogWrite(IN1, motorSpeed);
+//     analogWrite(IN2, 0);
+//     analogWrite(IN3, 0);
+//     analogWrite(IN4, motorSpeed);
+//     motorDirection = 3;
+// }
+
+// void motors_correctright() {
+//     // Left motor forward, right motor backward
+//     analogWrite(IN1, motorSpeed);
+//     analogWrite(IN2, 0);
+//     analogWrite(IN3, 0);
+//     analogWrite(IN4, motorSpeed - 30); // slight speed reduction for correction
+// }
+
+// void motors_coast() {
+//     // All pins low - free spin
+//     analogWrite(IN1, 0);
+//     analogWrite(IN2, 0);
+//     analogWrite(IN3, 0);
+//     analogWrite(IN4, 0);
+// }
+
+// void motors_update(bool fwd) {
+//     if (fwd) motors_forward();
+//     else motors_coast();
+// }
