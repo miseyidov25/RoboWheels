@@ -15,27 +15,27 @@ void line_update() {
 
  //LOW = on line, HIGH = off line
 
-  if (left == LOW && middle == HIGH && right == LOW) {
+  if (left == HIGH && middle == LOW && right == HIGH) {
     Serial.println("Forward");
     motors_forward();
-  } else if (left == LOW && middle == LOW && right == LOW) {
+  } else if (left == HIGH && middle == HIGH && right == HIGH) {
     Serial.println("All high");
-    motors_coast();
-  } else if (left == LOW && middle == LOW && right == HIGH) {
-    Serial.println("Right");
     motors_right();
-  } else if (left == LOW && middle == HIGH && right == HIGH) {
+  } else if (left == HIGH && middle == LOW && right == LOW) {
     Serial.println("Right & middle");
     motors_forward();
-  }else if (left == HIGH && middle == LOW && right == LOW) {
-    Serial.println("Left");
-    motors_left();
-  } else if (left == HIGH && middle == HIGH && right == LOW) {
+  }else if (left == HIGH && middle == HIGH && right == LOW) {
+    Serial.println("Right");
+    motors_right();
+  } else if (left == LOW && middle == LOW && right == HIGH) {
     Serial.println("Left & middle");
     motors_forward();
-  }else if (left == HIGH && middle == HIGH && right == HIGH) {
+  }else if (left == LOW && middle == HIGH && right == HIGH) {
+    Serial.println("Left");
+    motors_left();
+  } else if (left == LOW && middle == LOW && right == LOW) {
     Serial.println("All low");
-    motors_coast();
+    motors_right();
   }else {
     Serial.println("Something wrong");
     motors_coast();
