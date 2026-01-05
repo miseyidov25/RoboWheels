@@ -1,7 +1,13 @@
 #include "line.h"
 #include "pins.h"
 #include "motors.h"
-#include <Arduino.h>
+#include <avr/io.h>
+#include <stdbool.h>
+
+#define HIGH 1
+#define LOW 0
+
+void uart_println(const char* str);
 
 void line_update() {
   
@@ -11,33 +17,31 @@ void line_update() {
 
   // Line-following decisions
   // Compare the sampled boolean values to LOW/HIGH (do NOT call digitalRead(LOW))
-  if (currentEffectiveSpeed(), true) {}
-
- //LOW = on line, HIGH = off line
+  //LOW = on line, HIGH = off line (i think)
 
   if (left == HIGH && middle == LOW && right == HIGH) {
-    Serial.println("Forward");
+    uart_println("Forward");
     motors_forward();
   } else if (left == HIGH && middle == HIGH && right == HIGH) {
-    Serial.println("All high");
+    uart_println("All high");
     motors_right();
   } else if (left == HIGH && middle == LOW && right == LOW) {
-    Serial.println("Right & middle");
+    uart_println("Right & middle");
     motors_forward();
   }else if (left == HIGH && middle == HIGH && right == LOW) {
-    Serial.println("Right");
+    uart_println("Right");
     motors_right();
   } else if (left == LOW && middle == LOW && right == HIGH) {
-    Serial.println("Left & middle");
+    uart_println("Left & middle");
     motors_forward();
   }else if (left == LOW && middle == HIGH && right == HIGH) {
-    Serial.println("Left");
+    uart_println("Left");
     motors_left();
   } else if (left == LOW && middle == LOW && right == LOW) {
-    Serial.println("All low");
+    uart_println("All low");
     motors_right();
   }else {
-    Serial.println("Something wrong");
+    uart_println("Something wrong");
     motors_coast();
   }
 }

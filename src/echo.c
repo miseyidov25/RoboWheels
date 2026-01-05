@@ -3,6 +3,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include "pins.h"
+#include "bt.h"
 
 // Sensor index mapping
 // 0 = front (D7 / PD7)
@@ -115,39 +116,40 @@ void echo_update(void) {
         right < SAFE_DISTANCE && back < SAFE_DISTANCE) {
 
         motors_right();
-        Serial.println("SURROUNDED - turning right");
+        uart_println("SURROUNDED - turning right");
     }
     else if (front < SAFE_DISTANCE && left < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("FRONT+LEFT - turning right");
+        uart_println("FRONT+LEFT - turning right");
     }
     else if (front < SAFE_DISTANCE && right < SAFE_DISTANCE) {
         motors_left();
-        Serial.println("FRONT+RIGHT - turning left");
+        uart_println("FRONT+RIGHT - turning left");
     }
     else if (left < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("LEFT obstacle");
+        uart_println("LEFT obstacle");
     }
     else if (right < SAFE_DISTANCE) {
         motors_left();
-        Serial.println("RIGHT obstacle");
+        uart_println("RIGHT obstacle");
     }
     else if (front < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("FRONT obstacle");
+        uart_println("FRONT obstacle");
     }
     else if (back < SAFE_DISTANCE) {
         motors_forward();
-        Serial.println("BACK obstacle");
+        uart_println("BACK obstacle");
     }
     else {
         motors_forward();
-        Serial.println("Forward");
+        uart_println("Forward");
     }
 
-    Serial.print("F: "); Serial.print(front);
-    Serial.print(" L: "); Serial.print(left);
-    Serial.print(" R: "); Serial.print(right);
-    Serial.print(" B: "); Serial.println(back);
+    uart_print("F: "); uart_print_int(front);
+    uart_print(" L: "); uart_print_int(left);
+    uart_print(" R: "); uart_print_int(right);
+    uart_print(" B: "); uart_print_int(back);
+    uart_println("");
 }

@@ -1,8 +1,6 @@
 #ifndef MOTORS_H
 #define MOTORS_H
 
-#include <Arduino.h>
-
 // Motor API
 void motors_init();
 void motors_set_speed(int speed);
@@ -19,12 +17,12 @@ extern int motorSpeed;          // defined in main.cpp
 extern int motorSpeedAuto;      // defined in main.cpp
 extern int motorDirection;
 
-// Speed-level presets and index: defined in motors.cpp (storage)
+// Speed-level presets and index: defined in motors.cpp 
 extern int speedLevels[];
 extern int currentSpeedIndex;
 extern const int speedLevelsCount;
 
-// Helper: declared here, implemented in main.cpp (only once)
+// Helper: declared here, implemented in main.cpp 
 int currentEffectiveSpeed();
 
 #endif // MOTORS_H

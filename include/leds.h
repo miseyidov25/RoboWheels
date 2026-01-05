@@ -1,7 +1,7 @@
 #ifndef LEDS_H
 #define LEDS_H
 
-#include <Arduino.h>
+#include <stdbool.h>
 
 // Initialize LED pins
 void leds_init();
