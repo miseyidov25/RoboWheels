@@ -42,7 +42,7 @@ void loop() {
     oled_update();  
     bt_update();   
     
-    char cmd = bt_get_active_cmd();
+    bt_get_active_cmd();
     leds_update();
 
 

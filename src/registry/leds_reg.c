@@ -1,5 +1,6 @@
 #include "leds.h"
 #include "motors.h"
+#include "oled.h"
 #include <avr/io.h>
 #include "pins.h"
 
