@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "echo.h"
 #include "motors.h"
 #include <avr/io.h>
@@ -14,7 +15,8 @@
 #define NUM_READINGS      3
 #define MIN_DISTANCE_CM   2
 #define MAX_DISTANCE_CM   100
-#define SAFE_DISTANCE     30
+#define FRONT_SAFE_DISTANCE     30
+#define SAFE_DISTANCE     10
 
 #define ECHO_TIMEOUT_US   30000UL   // 30ms
 
@@ -111,37 +113,45 @@ void echo_update(void) {
     int right = distances[2];
     int back  = distances[3];
 
-    if (left < SAFE_DISTANCE && front < SAFE_DISTANCE &&
+    //serial print and arduino.h is temporary for testing
+
+    if (left < SAFE_DISTANCE && front < FRONT_SAFE_DISTANCE &&
         right < SAFE_DISTANCE && back < SAFE_DISTANCE) {
-
         motors_right();
-
+        Serial.println("SURROUNDED - turning right");
     }
-    else if (front < SAFE_DISTANCE && left < SAFE_DISTANCE) {
+    else if (front < FRONT_SAFE_DISTANCE && left < SAFE_DISTANCE) {
         motors_right();
-
+        Serial.println("FRONT+LEFT - turning right");
     }
-    else if (front < SAFE_DISTANCE && right < SAFE_DISTANCE) {
+    else if (front < FRONT_SAFE_DISTANCE && right < SAFE_DISTANCE) {
         motors_left();
-
+        Serial.println("FRONT+RIGHT - turning left");
     }
     else if (left < SAFE_DISTANCE) {
         motors_right();
-
+        Serial.println("LEFT obstacle");
     }
     else if (right < SAFE_DISTANCE) {
         motors_left();
-
+        Serial.println("RIGHT obstacle");
     }
-    else if (front < SAFE_DISTANCE) {
+    else if (front < FRONT_SAFE_DISTANCE) {
         motors_right();
-
+        Serial.println("FRONT obstacle");
     }
     else if (back < SAFE_DISTANCE) {
         motors_forward();
+        Serial.println("BACK obstacle");
     }
     else {
         motors_forward();
-
+        Serial.println("Forward");
     }
+
+    Serial.print("F: "); Serial.print(front);
+    Serial.print(" L: "); Serial.print(left);
+    Serial.print(" R: "); Serial.print(right);
+    Serial.print(" B: "); Serial.print(back);
+    Serial.println("");
 }
