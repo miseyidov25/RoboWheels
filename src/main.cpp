@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <Wire.h>
 #include "pins.h"
 #include "motors.h"

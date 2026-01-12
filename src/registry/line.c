@@ -1,7 +1,7 @@
 #include "line.h"
 #include "pins.h"
 #include "motors.h"
-#include <Arduino.h>
+#include "echo.h"
 #include <stdio.h>
 
 extern int currentSpeedIndex;
@@ -20,14 +20,48 @@ void line_update() {
 
   bool allHigh = (left == HIGH && middle == HIGH && right == HIGH);
 
+  // Get front distance
+  int distance = echo_getDistance(0);
+
+  // Determine effective speed
+  int effectiveSpeed = speedLevels[currentSpeedIndex];
+  bool shouldStop = false;
+
+  if (distance <= 10) {
+    shouldStop = true;
+    printf("Obstacle too close (%d cm), stopping\n", distance);
+  } else if (distance <= 20) {
+    effectiveSpeed = speedLevels[currentSpeedIndex] / 2;
+    printf("Obstacle ahead (%d cm), slowing down\n", distance);
+  }
+
+  // Apply boost if active
+  if (speedBoosted) {
+    int boostIndex = currentSpeedIndex + 1;
+    if (boostIndex >= speedLevelsCount) boostIndex = speedLevelsCount - 1;
+    effectiveSpeed = speedLevels[boostIndex];
+  }
+
+  // Check for boost timeout
+  if (speedBoosted && (millis() - boostStartTime > 2000)) {
+    speedBoosted = false;
+    printf("Speed reverted after timeout\n");
+  }
+
+  // Set the speed
+  motors_set_speed(effectiveSpeed);
+
+  // If too close, stop
+  if (shouldStop) {
+    motors_coast();
+    return;
+  }
+
   if (allHigh) {
     allHighCounter++;
     if (allHighCounter >= 3 && !speedBoosted) {
       speedBoosted = true;
       boostStartTime = millis();
-      int nextIndex = currentSpeedIndex + 1;
-      if (nextIndex >= speedLevelsCount) nextIndex = speedLevelsCount - 1;
-      motors_set_speed(speedLevels[nextIndex]);
       printf("Speed boosted due to all high\n");
     }
   } else {

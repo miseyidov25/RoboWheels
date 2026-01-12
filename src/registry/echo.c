@@ -3,7 +3,6 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include "pins.h"
-#include <Arduino.h>
 #include <stdio.h>
 
 // Sensor index mapping
