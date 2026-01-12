@@ -34,12 +34,12 @@ extern int motorSpeed;
 extern int motorSpeedAuto;
 extern int currentSpeedIndex;     
 
-// Declare motorDirection as extern with correct type
+// Declare motorDirection as extern
 extern volatile motor_direction_t motorDirection;
 
 // Speed-level presets and index: defined in motors.cpp 
-static const int speedLevels[] = {120, 150, 185, 220};
-static const int speedLevelsCount = sizeof(speedLevels) / sizeof(speedLevels[0]);
+extern const int speedLevels[];
+extern const int speedLevelsCount;
 
 // Helper: declared here, implemented in main.cpp (only once)
 int currentEffectiveSpeed(void);

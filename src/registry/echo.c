@@ -1,9 +1,10 @@
-#include <Arduino.h>
 #include "echo.h"
 #include "motors.h"
 #include <avr/io.h>
 #include <util/delay.h>
 #include "pins.h"
+#include <Arduino.h>
+#include <stdio.h>
 
 // Sensor index mapping
 // 0 = front (D7 / PD7)
@@ -15,7 +16,7 @@
 #define NUM_READINGS      3
 #define MIN_DISTANCE_CM   2
 #define MAX_DISTANCE_CM   100
-#define FRONT_SAFE_DISTANCE     30
+#define FRONT_SAFE_DISTANCE     25
 #define SAFE_DISTANCE     10
 
 #define ECHO_TIMEOUT_US   30000UL   // 30ms
@@ -118,40 +119,41 @@ void echo_update(void) {
     if (left < SAFE_DISTANCE && front < FRONT_SAFE_DISTANCE &&
         right < SAFE_DISTANCE && back < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("SURROUNDED - turning right");
+        printf("SURROUNDED - turning right\n");
+    } 
+    else if (left < SAFE_DISTANCE && front < FRONT_SAFE_DISTANCE &&
+        right < SAFE_DISTANCE ) {
+        motors_right();
+        printf("ALL FRONT BLOCKER - turning right\n");
+    } 
+    else if (front < FRONT_SAFE_DISTANCE && right < SAFE_DISTANCE) {
+        motors_left();
+        printf("FRONT+RIGHT - turning left\n");
     }
     else if (front < FRONT_SAFE_DISTANCE && left < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("FRONT+LEFT - turning right");
-    }
-    else if (front < FRONT_SAFE_DISTANCE && right < SAFE_DISTANCE) {
-        motors_left();
-        Serial.println("FRONT+RIGHT - turning left");
-    }
+        printf("FRONT+LEFT - turning right\n");
+    } 
     else if (left < SAFE_DISTANCE) {
         motors_right();
-        Serial.println("LEFT obstacle");
+        printf("LEFT obstacle\n");
     }
     else if (right < SAFE_DISTANCE) {
         motors_left();
-        Serial.println("RIGHT obstacle");
+        printf("RIGHT obstacle\n");
     }
     else if (front < FRONT_SAFE_DISTANCE) {
         motors_right();
-        Serial.println("FRONT obstacle");
+        printf("FRONT obstacle\n");
     }
     else if (back < SAFE_DISTANCE) {
         motors_forward();
-        Serial.println("BACK obstacle");
+        printf("BACK obstacle\n");
     }
     else {
         motors_forward();
-        Serial.println("Forward");
+        printf("Forward\n");
     }
 
-    Serial.print("F: "); Serial.print(front);
-    Serial.print(" L: "); Serial.print(left);
-    Serial.print(" R: "); Serial.print(right);
-    Serial.print(" B: "); Serial.print(back);
-    Serial.println("");
+    printf("F: %d L: %d R: %d B: %d\n", front, left, right, back);
 }

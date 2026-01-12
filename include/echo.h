@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Sensor index mapping
 // 0 = front
 // 1 = left
@@ -17,5 +21,9 @@ int echo_getDistance(uint8_t sensorIndex);
 
 // Update all sensors and perform obstacle-avoidance logic
 void echo_update(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

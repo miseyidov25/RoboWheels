@@ -2,6 +2,9 @@
 #include "bt.h"
 #include "motors.h"
 
+const int speedLevels[] = {100, 120, 160, 220};
+const int speedLevelsCount = sizeof(speedLevels) / sizeof(speedLevels[0]);
+
 // External globals
 extern Mode currentMode;
 extern bool menuActive;
