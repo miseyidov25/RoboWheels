@@ -65,7 +65,7 @@ void motors_set_speed(int speed) {
     motorSpeed = constrain_int(speed, 0, 255);  
 }
 
-void motors_set_speed_ramp(uint8_t speed) { // TODO: test it
+void motors_set_speed_ramp(uint8_t speed) { 
     if (speed > motorSpeed) motorSpeed++;
     else if (speed < motorSpeed) motorSpeed--;
 }
@@ -74,58 +74,40 @@ void motors_forward(void)
 {
     OCR1A = motorSpeed;  // IN1
     OCR0A = 0;           // IN2
-
     OCR0B = motorSpeed;  // IN3
     OCR1B = 0;           // IN4
-
     motorDirection = MOTOR_FORWARD;
 }
-
-
 void motors_reverse(void)
 {
     OCR1A = 0;
     OCR0A = motorSpeed;
-
     OCR0B = 0;
     OCR1B = motorSpeed;
-
     motorDirection = MOTOR_REVERSE;
 }
-
-
 void motors_left(void)
 {
     OCR1A = 0;
     OCR0A = motorSpeed;
-
     OCR0B = motorSpeed;
     OCR1B = 0;
-
     motorDirection = MOTOR_LEFT;
 }
-
-
 void motors_correctleft(void)
 {
     OCR1A = 0;
     OCR0A = motorSpeed;
-
     OCR0B = motorSpeed - 30;
     OCR1B = 0;
-
     motorDirection = MOTOR_CORRECT_LEFT;
 }
-
-
 void motors_right(void)
 {
     OCR1A = motorSpeed;
     OCR0A = 0;
-
     OCR0B = 0;
     OCR1B = motorSpeed;
-
     motorDirection = MOTOR_RIGHT;
 }
 
