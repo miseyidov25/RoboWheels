@@ -11,8 +11,14 @@ extern const int speedLevelsCount;
 static int allHighCounter = 0;
 static bool speedBoosted = false;
 static unsigned long boostStartTime = 0;
+static unsigned long lastUpdateTime = 0;
 
 void line_update() {
+  unsigned long currentTime = millis();
+  if (currentTime - lastUpdateTime < 30) {
+    return; 
+  }
+  lastUpdateTime = currentTime;
   
   bool left   = !(PIND & (1 << PD4));
   bool middle = !(PIND & (1 << PD3));
@@ -32,6 +38,7 @@ void line_update() {
     printf("Obstacle too close (%d cm), stopping\n", distance);
   } else if (distance <= 20) {
     effectiveSpeed = speedLevels[currentSpeedIndex] / 2;
+    if (effectiveSpeed < 100) effectiveSpeed = 100;
     printf("Obstacle ahead (%d cm), slowing down\n", distance);
   }
 
@@ -98,7 +105,7 @@ void line_update() {
     motors_left();
   } else if (left == LOW && middle == LOW && right == LOW) {
     printf("All low\n");
-    motors_right();
+    motors_forward();
   }else if (left == HIGH && middle == HIGH && right == HIGH) {
     printf("All high\n");
     motors_reverse();

@@ -49,7 +49,8 @@ void executeCommand(char cmd) {
     // Mode commands
     switch (cmd) {
         case 'W': currentMode = AUTONOMOUS; menuActive = false; hasSelectedMode = true; Serial.println("Mode: AUTONOMOUS"); return;
-        case 'X': currentMode = SLAVE;      menuActive = false; hasSelectedMode = true; Serial.println("Mode: SLAVE");      return;
+        case 'X': currentMode = SLAVE; menuActive = false; hasSelectedMode = true; currentSpeedIndex = 1; // Set to 120
+            motors_set_speed(speedLevels[currentSpeedIndex]); Serial.println("Mode: SLAVE"); return;
         case 'U': currentMode = MANUAL;     menuActive = false; hasSelectedMode = true; Serial.println("Mode: MANUAL");     return;
     }
 

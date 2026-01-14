@@ -16,7 +16,8 @@
 #define MIN_DISTANCE_CM   2
 #define MAX_DISTANCE_CM   100
 #define FRONT_SAFE_DISTANCE     25
-#define SAFE_DISTANCE     10
+#define SAFE_DISTANCE     20
+#define BACK_SAFE_DISTANCE     10
 
 #define ECHO_TIMEOUT_US   30000UL   // 30ms
 
@@ -113,10 +114,8 @@ void echo_update(void) {
     int right = distances[2];
     int back  = distances[3];
 
-    //serial print and arduino.h is temporary for testing
-
     if (left < SAFE_DISTANCE && front < FRONT_SAFE_DISTANCE &&
-        right < SAFE_DISTANCE && back < SAFE_DISTANCE) {
+        right < SAFE_DISTANCE && back < BACK_SAFE_DISTANCE) {
         motors_right();
         printf("SURROUNDED - turning right\n");
     } 
@@ -145,7 +144,7 @@ void echo_update(void) {
         motors_right();
         printf("FRONT obstacle\n");
     }
-    else if (back < SAFE_DISTANCE) {
+    else if (back < BACK_SAFE_DISTANCE) {
         motors_forward();
         printf("BACK obstacle\n");
     }
