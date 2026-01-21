@@ -15,9 +15,8 @@
 #define NUM_READINGS      3
 #define MIN_DISTANCE_CM   2
 #define MAX_DISTANCE_CM   100
-#define FRONT_SAFE_DISTANCE     25
 #define SAFE_DISTANCE     20
-#define BACK_SAFE_DISTANCE     10
+
 
 #define ECHO_TIMEOUT_US   30000UL   // 30ms
 
@@ -114,24 +113,10 @@ void echo_update(void) {
     int right = distances[2];
     int back  = distances[3];
 
-    if (left < SAFE_DISTANCE && front < FRONT_SAFE_DISTANCE &&
-        right < SAFE_DISTANCE && back < BACK_SAFE_DISTANCE) {
+    if (front < SAFE_DISTANCE) {
         motors_right();
-        printf("SURROUNDED - turning right\n");
-    } 
-    else if (left < SAFE_DISTANCE && front < FRONT_SAFE_DISTANCE &&
-        right < SAFE_DISTANCE ) {
-        motors_right();
-        printf("ALL FRONT BLOCKER - turning right\n");
-    } 
-    else if (front < FRONT_SAFE_DISTANCE && right < SAFE_DISTANCE) {
-        motors_left();
-        printf("FRONT+RIGHT - turning left\n");
+        printf("FRONT obstacle\n");
     }
-    else if (front < FRONT_SAFE_DISTANCE && left < SAFE_DISTANCE) {
-        motors_right();
-        printf("FRONT+LEFT - turning right\n");
-    } 
     else if (left < SAFE_DISTANCE) {
         motors_right();
         printf("LEFT obstacle\n");
@@ -140,11 +125,8 @@ void echo_update(void) {
         motors_left();
         printf("RIGHT obstacle\n");
     }
-    else if (front < FRONT_SAFE_DISTANCE) {
-        motors_right();
-        printf("FRONT obstacle\n");
-    }
-    else if (back < BACK_SAFE_DISTANCE) {
+    
+    else if (back < SAFE_DISTANCE) {
         motors_forward();
         printf("BACK obstacle\n");
     }

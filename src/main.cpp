@@ -16,7 +16,7 @@ unsigned long previousMillis = 0;
 
 // make it available to other files:
 int currentEffectiveSpeed() {
-    return (currentMode == AUTONOMOUS) ? motorSpeedAuto : motorSpeed;
+    return motorSpeed;
 }
 
 void setup() {
@@ -40,7 +40,6 @@ void setup() {
 void loop() {
     oled_update();  
     bt_update();   
-    
     bt_get_active_cmd();
     leds_update();
 

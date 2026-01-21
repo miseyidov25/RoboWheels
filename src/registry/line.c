@@ -26,6 +26,14 @@ void line_update() {
 
   bool allHigh = (left == HIGH && middle == HIGH && right == HIGH);
 
+  typedef enum {
+      DIR_LEFT,
+      DIR_RIGHT,
+      DIR_STRAIGHT
+  } Direction;
+
+  Direction lastDirection = DIR_STRAIGHT;
+
   // Get front distance
   int distance = echo_getDistance(0);
 
@@ -88,29 +96,54 @@ void line_update() {
 
  //LOW = on line, HIGH = off line
 
-  if (left == HIGH && middle == LOW && right == HIGH) {
+  // if (left == HIGH && middle == LOW && right == HIGH) {
+  //   printf("Forward\n");
+  //   motors_forward();
+  // } else if (left == LOW && middle == LOW && right == LOW) {
+  //   printf("All low\n");
+  //   motors_forward();
+  // } else if (left == HIGH && middle == LOW && right == LOW) {
+  //   printf("Right & middle\n");
+  //   motors_forward();
+  // } else if (left == LOW && middle == LOW && right == HIGH) {
+  //   printf("Left & middle\n");
+  //   motors_forward();
+  // } else if (left == LOW && middle == HIGH && right == HIGH) {
+  //   printf("Left\n");
+  //   motors_left();
+  // } else if (left == HIGH && middle == HIGH && right == LOW) {
+  //   printf("Right\n");
+  //   motors_right();
+  // }  else if (left == HIGH && middle == HIGH && right == HIGH) {
+  //   printf("All high\n");
+  //   motors_reverse();
+  // } else {
+  //   printf("Something wrong\n");
+  //   motors_coast();
+  // }
+
+  if (middle == LOW) {
     printf("Forward\n");
+    lastDirection = DIR_STRAIGHT;
     motors_forward();
-  } else if (left == HIGH && middle == LOW && right == LOW) {
-    printf("Right & middle\n");
-    motors_forward();
-  }else if (left == HIGH && middle == HIGH && right == LOW) {
+  } else if (left == HIGH && right == LOW) {
     printf("Right\n");
+    lastDirection = DIR_RIGHT;
     motors_right();
-  } else if (left == LOW && middle == LOW && right == HIGH) {
-    printf("Left & middle\n");
-    motors_forward();
-  }else if (left == LOW && middle == HIGH && right == HIGH) {
+  } else if (left == LOW && right == HIGH) {
     printf("Left\n");
+    lastDirection = DIR_LEFT;
     motors_left();
-  } else if (left == LOW && middle == LOW && right == LOW) {
-    printf("All low\n");
-    motors_forward();
-  }else if (left == HIGH && middle == HIGH && right == HIGH) {
-    printf("All high\n");
-    motors_reverse();
   } else {
-    printf("Something wrong\n");
-    motors_coast();
-  }
+    printf("Lost line\n");
+    if (lastDirection == DIR_LEFT) {
+        motors_left();
+    } else if (lastDirection == DIR_RIGHT) {
+        motors_right();
+    } else if (lastDirection == DIR_STRAIGHT) {
+        motors_reverse();
+    }else {
+        motors_forward();
+    }
+}
 }
