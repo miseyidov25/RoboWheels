@@ -162,31 +162,28 @@ void drawSplashScreen() {
 
 // BUTTON HANDLING 
 
-static void handleNextPressed() {
-    if (!menuActive) return;
-
-    int idx = (int)menuSelection;
-    idx++;
-    if (idx > SLAVE) idx = MANUAL;  // wrap around
-    menuSelection = (Mode)idx;
-    u8g2.clearDisplay();
-}
 
 static void handleSelectPressed() {
     if (menuActive) {
         currentMode = menuSelection;
         hasSelectedMode = true;
         menuActive = false;
+        lastSecondTick = millis();
         u8g2.clearDisplay();
         Serial.print("Mode selected: ");
         Serial.println(modeToString(currentMode));
     } else {
-        menuActive = true;
         menuSelection = currentMode;
+        currentMode = NONE;
+        hasSelectedMode = false;
+        motors_coast();
+        lastSecondTick = millis();
+        menuActive = true;
         u8g2.clearDisplay();
         Serial.println("Menu reopened");
     }
 }
+
 
 void readButtons() {
     bool currentNext = digitalRead(BTN_NEXT_PIN);
